@@ -2,6 +2,7 @@ package com.gieokham.api.category.service;
 
 import com.gieokham.api.category.domain.Category;
 import com.gieokham.api.category.dto.CategoryResponse;
+import com.gieokham.api.category.exception.CategoryNotFoundException;
 import com.gieokham.api.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -30,5 +31,10 @@ public class CategoryService {
         );
 
         return categoryRepository.findAll(sort);
+    }
+
+    public Category getCategory(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new CategoryNotFoundException(categoryId));
     }
 }

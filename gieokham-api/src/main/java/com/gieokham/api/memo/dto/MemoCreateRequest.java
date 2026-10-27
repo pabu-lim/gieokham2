@@ -2,6 +2,7 @@ package com.gieokham.api.memo.dto;
 
 import com.gieokham.api.memo.domain.MemoPriority;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,4 +18,7 @@ public class MemoCreateRequest {
         private String content;
 
         private MemoPriority priority;
+
+        @Positive(message = "카테고리 ID는 양수여야 합니다.")
+        private Long categoryId;
 }

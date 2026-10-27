@@ -17,6 +17,7 @@ public class MemoResponse {
     private Long id;
     private String content;
     private MemoPriority priority;
+    private long categoryId;
     private  LocalDateTime completedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -26,6 +27,7 @@ public class MemoResponse {
                 memo.getId(),
                 memo.getContent(),
                 memo.getPriority(),
+                memo.getCategory() != null ? memo.getCategory().getId() : null,
                 memo.getCompletedAt(),
                 memo.getCreatedAt(),
                 memo.getUpdatedAt()

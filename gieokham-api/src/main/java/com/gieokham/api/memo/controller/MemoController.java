@@ -23,7 +23,7 @@ public class MemoController {
     @ResponseStatus(HttpStatus.CREATED)
     public MemoResponse createMemo(@Valid @RequestBody MemoCreateRequest request) {
         return MemoResponse.from(
-                memoService.createMemo(request.getContent(), request.getPriority())
+                memoService.createMemo(request.getContent(), request.getPriority(), request.getCategoryId())
         );
     }
 

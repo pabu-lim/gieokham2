@@ -1,8 +1,9 @@
 package com.gieokham.api.memo.service;
 
+import com.gieokham.api.category.domain.Category;
+import com.gieokham.api.category.service.CategoryService;
 import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.domain.MemoPriority;
-import com.gieokham.api.memo.dto.MemoCompletionUpdateRequest;
 import com.gieokham.api.memo.dto.MemoSearchRequest;
 import com.gieokham.api.memo.exception.MemoNotFoundException;
 import com.gieokham.api.memo.repository.MemoRepository;
@@ -13,12 +14,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -26,10 +23,17 @@ import java.util.List;
 public class MemoService {
 
     private final MemoRepository memoRepository;
+    private final CategoryService categoryService;
 
     @Transactional
-    public Memo createMemo(String content, MemoPriority priority) {
+    public Memo createMemo(String content, MemoPriority priority, Long categoryId) {
         Memo memo = new Memo(content, priority);
+
+        if (categoryId != null) {
+            Category category = categoryService.getCategory(categoryId);
+            memo.changeCategory(category);
+        }
+
         return memoRepository.save(memo);
     }
 

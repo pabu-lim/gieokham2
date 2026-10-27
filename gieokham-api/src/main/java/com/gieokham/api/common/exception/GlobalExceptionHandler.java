@@ -1,5 +1,6 @@
 package com.gieokham.api.common.exception;
 
+import com.gieokham.api.category.exception.CategoryNotFoundException;
 import com.gieokham.api.memo.dto.ErrorResponse;
 import com.gieokham.api.memo.dto.ValidationErrorResponse;
 import com.gieokham.api.memo.exception.MemoNotFoundException;
@@ -44,5 +45,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleMemoNotFoundException(MemoNotFoundException exception) {
         return new ErrorResponse("메모를 찾을 수 없습니다.");
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleCategoryNotFoundException(CategoryNotFoundException exception) {
+        return new ErrorResponse("카테고리를 찾을 수 없습니다.");
     }
 }
