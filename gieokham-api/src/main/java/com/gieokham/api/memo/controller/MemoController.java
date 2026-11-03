@@ -46,7 +46,7 @@ public class MemoController {
     public MemoResponse updateMemo(@PathVariable("memoId") Long memoId,
                                    @Valid @RequestBody MemoUpdateRequest request) {
         return MemoResponse.from(
-                memoService.updateMemo(memoId, request.getContent(), request.getPriority())
+                memoService.updateMemo(memoId, request.getContent(), request.getPriority(), request.getCategoryId())
         );
     }
 

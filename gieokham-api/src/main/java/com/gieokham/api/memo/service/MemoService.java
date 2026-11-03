@@ -52,7 +52,8 @@ public class MemoService {
         Specification<Memo> specification = MemoSpecification.search(
                 request.getCompleted(),
                 request.getPriority(),
-                request.getKeyword()
+                request.getKeyword(),
+                request.getCategoryId()
         );
 
         return memoRepository.findAll(specification, pageable);
@@ -64,9 +65,16 @@ public class MemoService {
     }
 
     @Transactional
-    public Memo updateMemo(Long memoId, String content, MemoPriority priority) {
+    public Memo updateMemo(Long memoId, String content, MemoPriority priority, Long categoryId) {
         Memo memo = getMemo(memoId);
+
         memo.update(content, priority);
+
+        if (categoryId != null) {
+            memo.changeCategory(categoryService.getCategory(categoryId));
+        } else {
+            memo.changeCategory(null);
+        }
 
         return memo;
     }

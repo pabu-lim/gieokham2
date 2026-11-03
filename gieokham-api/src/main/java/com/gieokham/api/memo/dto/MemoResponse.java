@@ -17,7 +17,7 @@ public class MemoResponse {
     private Long id;
     private String content;
     private MemoPriority priority;
-    private long categoryId;
+    private Long categoryId;
     private  LocalDateTime completedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
