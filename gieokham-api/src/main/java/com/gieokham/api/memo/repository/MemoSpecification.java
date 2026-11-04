@@ -14,10 +14,12 @@ public class MemoSpecification {
     private MemoSpecification() {
     }
 
-    public static Specification<Memo> search(Boolean completed, MemoPriority priority, String keyword,
-                                             Long categoryId) {
+    public static Specification<Memo> search(Long memberId, Boolean completed, MemoPriority priority,
+                                             String keyword, Long categoryId) {
         return((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(cb.equal(root.get("member").get("id"), memberId));
 
             if (categoryId != null) {
                 predicates.add(categoryId == 0L

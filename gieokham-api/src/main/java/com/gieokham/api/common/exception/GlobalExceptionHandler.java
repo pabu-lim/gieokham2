@@ -1,10 +1,13 @@
 package com.gieokham.api.common.exception;
 
 import com.gieokham.api.category.exception.CategoryNotFoundException;
+import com.gieokham.api.member.exception.MemberAlreadyRegisteredException;
+import com.gieokham.api.member.exception.MemberNotFoundException;
 import com.gieokham.api.memo.dto.ErrorResponse;
 import com.gieokham.api.memo.dto.ValidationErrorResponse;
 import com.gieokham.api.memo.exception.MemoNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -52,4 +55,17 @@ public class GlobalExceptionHandler {
     public ErrorResponse handleCategoryNotFoundException(CategoryNotFoundException exception) {
         return new ErrorResponse("카테고리를 찾을 수 없습니다.");
     }
+
+    @ExceptionHandler(MemberAlreadyRegisteredException.class)
+    public ResponseEntity<ErrorResponse> handleMemberAlreadyRegistered(MemberAlreadyRegisteredException exception) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(MemberNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleMemberNotFound(MemberNotFoundException exception) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ErrorResponse(exception.getMessage()));
+    }
+
 }

@@ -1,6 +1,7 @@
 package com.gieokham.api.memo.domain;
 
 import com.gieokham.api.category.domain.Category;
+import com.gieokham.api.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -26,6 +27,10 @@ public class Memo {
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id", nullable = false, updatable = false)
+    private Member member;
+
     @Column(name = "completed_at")
     private LocalDateTime completedAt;
 
@@ -38,7 +43,8 @@ public class Memo {
     protected Memo(){
     }
 
-    public Memo(String content, MemoPriority priority){
+    public Memo(Member member, String content, MemoPriority priority){
+        this.member = member;
         this.content = content;
         this.priority = priority != null ? priority : MemoPriority.MEDIUM;
     }

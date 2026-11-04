@@ -1,16 +1,15 @@
 package com.gieokham.api.memo.controller;
 
-import com.gieokham.api.memo.domain.MemoPriority;
+import com.gieokham.api.auth.security.CustomOidcUser;
+import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.dto.*;
 import com.gieokham.api.memo.service.MemoService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/memos")
@@ -21,45 +20,56 @@ public class MemoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public MemoResponse createMemo(@Valid @RequestBody MemoCreateRequest request) {
-        return MemoResponse.from(
-                memoService.createMemo(request.getContent(), request.getPriority(), request.getCategoryId())
+    public ResponseEntity<MemoResponse> createMemo(@AuthenticationPrincipal CustomOidcUser principal,
+            @Valid @RequestBody MemoCreateRequest request) {
+        Memo memo = memoService.createMemo(
+                principal.getMemberId(),
+                request.getContent(),
+                request.getPriority(),
+                request.getCategoryId()
         );
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(MemoResponse.from(memo));
     }
 
     @GetMapping
-    public MemoPageResponse getMemos(
-            @Valid @ModelAttribute MemoSearchRequest request) {
+    public MemoPageResponse getMemos(@AuthenticationPrincipal CustomOidcUser principal,
+                                     @Valid @ModelAttribute MemoSearchRequest request) {
         return MemoPageResponse.from(
-                memoService.getMemos(request)
+                memoService.getMemos(principal.getMemberId(), request)
         );
     }
 
     @GetMapping("/{memoId}")
-    public MemoResponse getMemo(@PathVariable("memoId") Long memoId) {
+    public MemoResponse getMemo(@PathVariable("memoId") Long memoId,
+                                @AuthenticationPrincipal CustomOidcUser principal) {
         return MemoResponse.from(
-                memoService.getMemo(memoId)
+                memoService.getMemo(memoId, principal.getMemberId())
         );
     }
 
     @PatchMapping("/{memoId}")
     public MemoResponse updateMemo(@PathVariable("memoId") Long memoId,
+                                   @AuthenticationPrincipal CustomOidcUser principal,
                                    @Valid @RequestBody MemoUpdateRequest request) {
         return MemoResponse.from(
-                memoService.updateMemo(memoId, request.getContent(), request.getPriority(), request.getCategoryId())
+                memoService.updateMemo(memoId, principal.getMemberId(), request.getContent(), request.getPriority(), request.getCategoryId())
         );
     }
 
     @DeleteMapping("/{memoId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteMemo(@PathVariable("memoId") Long memoId) {
-        memoService.deleteMemo(memoId);
+    public void deleteMemo(@PathVariable("memoId") Long memoId,
+                           @AuthenticationPrincipal CustomOidcUser principal) {
+        memoService.deleteMemo(memoId, principal.getMemberId());
     }
 
     @PatchMapping("/{memoId}/completion")
     public MemoResponse updateCompletion(@PathVariable("memoId") Long memoId,
+                                         @AuthenticationPrincipal CustomOidcUser principal,
                                          @Valid @RequestBody MemoCompletionUpdateRequest request) {
-        return MemoResponse.from(memoService.updateCompletion(memoId, request.getCompleted()));
+        return MemoResponse.from(memoService.updateCompletion(memoId, principal.getMemberId(), request.getCompleted()));
     }
 
 

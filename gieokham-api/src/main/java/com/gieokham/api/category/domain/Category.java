@@ -1,5 +1,6 @@
 package com.gieokham.api.category.domain;
 
+import com.gieokham.api.member.domain.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -23,13 +24,18 @@ public class Category {
     @Column(name = "sort_order", nullable = false)
     private int sortOrder;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id", nullable = false, updatable = false)
+    private Member member;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
-    public Category(String name, int sortOrder) {
+    public Category(Member member, String name, int sortOrder) {
+        this.member = member;
         this.name = name;
         this.sortOrder = sortOrder;
     }

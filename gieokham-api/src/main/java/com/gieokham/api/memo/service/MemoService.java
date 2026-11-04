@@ -2,6 +2,8 @@ package com.gieokham.api.memo.service;
 
 import com.gieokham.api.category.domain.Category;
 import com.gieokham.api.category.service.CategoryService;
+import com.gieokham.api.member.domain.Member;
+import com.gieokham.api.member.service.MemberService;
 import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.domain.MemoPriority;
 import com.gieokham.api.memo.dto.MemoSearchRequest;
@@ -24,20 +26,24 @@ public class MemoService {
 
     private final MemoRepository memoRepository;
     private final CategoryService categoryService;
+    private final MemberService memberService;
 
     @Transactional
-    public Memo createMemo(String content, MemoPriority priority, Long categoryId) {
-        Memo memo = new Memo(content, priority);
+    public Memo createMemo(Long memberId, String content, MemoPriority priority,
+                           Long categoryId) {
+        Member member = memberService.getMember(memberId);
+
+        Memo memo = new Memo(member, content, priority);
 
         if (categoryId != null) {
-            Category category = categoryService.getCategory(categoryId);
+            Category category = categoryService.getCategory(categoryId, memberId);
             memo.changeCategory(category);
         }
 
         return memoRepository.save(memo);
     }
 
-    public Page<Memo> getMemos(MemoSearchRequest request) {
+    public Page<Memo> getMemos(Long memberId, MemoSearchRequest request) {
         Sort sort = Sort.by(
                 Sort.Order.desc("createdAt"),
                 Sort.Order.desc("id")
@@ -50,6 +56,7 @@ public class MemoService {
         );
 
         Specification<Memo> specification = MemoSpecification.search(
+                memberId,
                 request.getCompleted(),
                 request.getPriority(),
                 request.getKeyword(),
@@ -59,35 +66,35 @@ public class MemoService {
         return memoRepository.findAll(specification, pageable);
     }
 
-    public Memo getMemo(Long memoId) {
-        return memoRepository.findById(memoId)
+    public Memo getMemo(Long memoId, Long memberId) {
+        return memoRepository.findByIdAndMemberId(memoId, memberId)
                 .orElseThrow(() -> new MemoNotFoundException(memoId));
     }
 
     @Transactional
-    public Memo updateMemo(Long memoId, String content, MemoPriority priority, Long categoryId) {
-        Memo memo = getMemo(memoId);
-
-        memo.update(content, priority);
+    public Memo updateMemo(Long memoId, Long memberId, String content, MemoPriority priority, Long categoryId) {
+        Memo memo = getMemo(memoId, memberId);
 
         if (categoryId != null) {
-            memo.changeCategory(categoryService.getCategory(categoryId));
+            memo.changeCategory(categoryService.getCategory(categoryId, memberId));
         } else {
             memo.changeCategory(null);
         }
+
+        memo.update(content, priority);
 
         return memo;
     }
 
     @Transactional
-    public void deleteMemo(Long memoId) {
-        Memo memo = getMemo(memoId);
+    public void deleteMemo(Long memoId, Long memberId) {
+        Memo memo = getMemo(memoId, memberId);
         memoRepository.delete(memo);
     }
 
     @Transactional
-    public Memo updateCompletion(Long memoId, boolean completed) {
-        Memo memo = getMemo(memoId);
+    public Memo updateCompletion(Long memoId, Long memberId, boolean completed) {
+        Memo memo = getMemo(memoId, memberId);
         memo.updateCompletion(completed);
 
         return memo;
