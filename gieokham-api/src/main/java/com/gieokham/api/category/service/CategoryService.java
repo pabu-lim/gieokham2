@@ -1,7 +1,6 @@
 package com.gieokham.api.category.service;
 
 import com.gieokham.api.category.domain.Category;
-import com.gieokham.api.category.dto.CategoryResponse;
 import com.gieokham.api.category.exception.CategoryNotFoundException;
 import com.gieokham.api.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,5 +35,19 @@ public class CategoryService {
     public Category getCategory(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new CategoryNotFoundException(categoryId));
+    }
+
+    @Transactional
+    public Category updateCategory(Long categoryId, String name) {
+        Category category = getCategory(categoryId);
+        category.rename(name);
+
+        return category;
+    }
+
+    @Transactional
+    public void deleteCategory(Long categoryId) {
+        Category category = getCategory(categoryId);
+        categoryRepository.delete(category);
     }
 }

@@ -4,6 +4,7 @@ import com.gieokham.api.category.domain.Category;
 import com.gieokham.api.category.dto.CategoryCreateRequest;
 import com.gieokham.api.category.dto.CategoryOptionResponse;
 import com.gieokham.api.category.dto.CategoryResponse;
+import com.gieokham.api.category.dto.CategoryUpdateRequest;
 import com.gieokham.api.category.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,5 +46,21 @@ public class CategoryController {
         }
 
         return options;
+    }
+
+    @PatchMapping("/{categoryId}")
+    public CategoryResponse updateCategory(
+            @PathVariable("categoryId") Long categoryId,
+            @Valid @RequestBody CategoryUpdateRequest request
+    ) {
+        return CategoryResponse.from(
+                categoryService.updateCategory(categoryId, request.getName())
+        );
+    }
+
+    @DeleteMapping("/{categoryId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteCategory(@PathVariable("categoryId") Long categoryId) {
+        categoryService.deleteCategory(categoryId);
     }
 }
