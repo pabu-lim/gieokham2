@@ -49,6 +49,7 @@ CREATE TABLE member_identity (
 CREATE TABLE category (
     id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     member_id  BIGINT NOT NULL,
+    parent_id BIGINT,
     name       VARCHAR(100) NOT NULL,
     sort_order INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL
@@ -58,6 +59,14 @@ CREATE TABLE category (
 
     CONSTRAINT fk_category_member
         FOREIGN KEY (member_id) REFERENCES member(id),
+
+    CONSTRAINT fk_category_parent
+        FOREIGN KEY (parent_id)
+        REFERENCES category(id)
+        ON DELETE SET NULL,
+
+    CONSTRAINT ck_category_parent_not_self
+        CHECK (parent_id <> id),
 
     CONSTRAINT ck_category_name_not_blank
         CHECK (name ~ '[^[:space:]]'),
@@ -99,6 +108,9 @@ CREATE INDEX idx_member_identity_member_id
 
 CREATE INDEX idx_category_member_id
     ON category(member_id);
+
+CREATE INDEX idx_category_parent_id
+    ON category(parent_id);
 
 CREATE INDEX idx_memo_member_id
     ON memo(member_id);

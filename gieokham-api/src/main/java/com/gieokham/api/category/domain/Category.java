@@ -28,6 +28,10 @@ public class Category {
     @JoinColumn(name = "member_id", nullable = false, updatable = false)
     private Member member;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Category parent;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -40,10 +44,6 @@ public class Category {
         this.sortOrder = sortOrder;
     }
 
-    public void rename(String name) {
-        this.name = name;
-    }
-
     @PrePersist
     protected void onCreate() {
         LocalDateTime now = LocalDateTime.now();
@@ -54,5 +54,17 @@ public class Category {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void rename(String name) {
+        this.name = name;
+    }
+
+    public void changeParent(Category parent) {
+        this.parent = parent;
+    }
+
+    public void changeSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 }

@@ -57,4 +57,10 @@ public class MemberService {
 
         return member;
     }
+
+    @Transactional
+    public Member getMemberForUpdate(Long memberId) {
+        return memberRepository.findByIdForUpdate(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId));
+    }
 }

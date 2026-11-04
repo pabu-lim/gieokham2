@@ -1,6 +1,8 @@
 package com.gieokham.api.common.exception;
 
 import com.gieokham.api.category.exception.CategoryNotFoundException;
+import com.gieokham.api.category.exception.InvalidCategoryParentException;
+import com.gieokham.api.category.exception.InvalidCategoryPositionException;
 import com.gieokham.api.member.exception.MemberAlreadyRegisteredException;
 import com.gieokham.api.member.exception.MemberNotFoundException;
 import com.gieokham.api.memo.dto.ErrorResponse;
@@ -64,8 +66,19 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MemberNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleMemberNotFound(MemberNotFoundException exception) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(new ErrorResponse(exception.getMessage()));
     }
 
+    @ExceptionHandler(InvalidCategoryParentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCategoryParent(InvalidCategoryParentException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidCategoryPositionException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidCategoryPosition(InvalidCategoryPositionException exception) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(exception.getMessage()));
+    }
 }

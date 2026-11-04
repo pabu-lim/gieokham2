@@ -13,6 +13,7 @@ public class CategoryResponse {
 
     private Long id;
     private String name;
+    private Long parentId;
     private int sortOrder;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -21,6 +22,9 @@ public class CategoryResponse {
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),
+                category.getParent() != null
+                        ? category.getParent().getId()
+                        : null,
                 category.getSortOrder(),
                 category.getCreatedAt(),
                 category.getUpdatedAt()
