@@ -15,7 +15,7 @@ public class MemoSpecification {
     }
 
     public static Specification<Memo> search(Long memberId, Boolean completed, MemoPriority priority,
-                                             String keyword, Long categoryId) {
+                                             String keyword, Long categoryId, List<Long> categoryIds) {
         return((root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -24,7 +24,7 @@ public class MemoSpecification {
             if (categoryId != null) {
                 predicates.add(categoryId == 0L
                         ? cb.isNull(root.get("category"))
-                        : cb.equal(root.get("category").get("id"), categoryId));
+                        : root.get("category").get("id").in(categoryIds));
             }
 
             if (completed != null) {

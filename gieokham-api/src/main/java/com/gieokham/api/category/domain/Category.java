@@ -67,4 +67,8 @@ public class Category {
     public void changeSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
     }
+
+    public Long getParentId() {
+        return parent != null ? parent.getId() : null;
+    }
 }

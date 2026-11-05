@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/memos")
 @RequiredArgsConstructor
@@ -20,42 +22,29 @@ public class MemoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<MemoResponse> createMemo(@AuthenticationPrincipal CustomOidcUser principal,
+    public MemoResponse createMemo(@AuthenticationPrincipal CustomOidcUser principal,
             @Valid @RequestBody MemoCreateRequest request) {
-        Memo memo = memoService.createMemo(
-                principal.getMemberId(),
-                request.getContent(),
-                request.getPriority(),
-                request.getCategoryId()
-        );
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(MemoResponse.from(memo));
+        return memoService.createMemo(principal.getMemberId(), request);
     }
 
     @GetMapping
     public MemoPageResponse getMemos(@AuthenticationPrincipal CustomOidcUser principal,
                                      @Valid @ModelAttribute MemoSearchRequest request) {
-        return MemoPageResponse.from(
-                memoService.getMemos(principal.getMemberId(), request)
-        );
+        return memoService.getMemos(principal.getMemberId(), request);
     }
 
     @GetMapping("/{memoId}")
     public MemoResponse getMemo(@PathVariable("memoId") Long memoId,
                                 @AuthenticationPrincipal CustomOidcUser principal) {
-        return MemoResponse.from(
-                memoService.getMemo(memoId, principal.getMemberId())
-        );
+        return memoService.getMemoResponse(memoId, principal.getMemberId());
     }
 
     @PatchMapping("/{memoId}")
     public MemoResponse updateMemo(@PathVariable("memoId") Long memoId,
                                    @AuthenticationPrincipal CustomOidcUser principal,
                                    @Valid @RequestBody MemoUpdateRequest request) {
-        return MemoResponse.from(
-                memoService.updateMemo(memoId, principal.getMemberId(), request.getContent(), request.getPriority(), request.getCategoryId())
-        );
+        return memoService.updateMemo(memoId, principal.getMemberId(), request);
     }
 
     @DeleteMapping("/{memoId}")
@@ -66,11 +55,20 @@ public class MemoController {
     }
 
     @PatchMapping("/{memoId}/completion")
-    public MemoResponse updateCompletion(@PathVariable("memoId") Long memoId,
+    public MemoResponse updateMemoCompletion(@PathVariable("memoId") Long memoId,
                                          @AuthenticationPrincipal CustomOidcUser principal,
                                          @Valid @RequestBody MemoCompletionUpdateRequest request) {
-        return MemoResponse.from(memoService.updateCompletion(memoId, principal.getMemberId(), request.getCompleted()));
+        return memoService.updateMemoCompletion(memoId, principal.getMemberId(), request.getCompleted());
     }
 
+    @GetMapping("/completions/today")
+    public List<Long> getCompletedRepeatMemoIdsToday(@AuthenticationPrincipal CustomOidcUser principal) {
+        return memoService.getCompletedRepeatMemoIdsToday(principal.getMemberId());
+    }
+
+    @GetMapping("/today")
+    public List<MemoResponse> getTodayMemos(@AuthenticationPrincipal CustomOidcUser principal) {
+        return memoService.getTodayMemos(principal.getMemberId());
+    }
 
 }

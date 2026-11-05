@@ -35,7 +35,9 @@ public class CategoryService {
             parent = getCategory(parentId, memberId);
         }
 
-        Category category = new Category(member, name, 0);
+        int sortOrder = categoryRepository.findNextSortOrder(memberId, parentId);
+
+        Category category = new Category(member, name, sortOrder);
         category.changeParent(parent);
 
         return categoryRepository.save(category);
@@ -61,13 +63,6 @@ public class CategoryService {
         category.rename(name);
 
         return category;
-    }
-
-    @Transactional
-    public void deleteCategory(Long categoryId, Long memberId) {
-        memberService.getMemberForUpdate(memberId);
-        Category category = getCategory(categoryId, memberId);
-        categoryRepository.delete(category);
     }
 
     @Transactional
@@ -146,5 +141,15 @@ public class CategoryService {
         for (int i = 0; i < categories.size(); i++) {
             categories.get(i).changeSortOrder(i);
         }
+    }
+
+    public List<Long> getSubtreeIds(Long categoryId, Long memberId) {
+        List<Long> categoryIds = categoryRepository.findSubtreeIds(categoryId, memberId);
+
+        if (categoryIds.isEmpty()) {
+            throw new CategoryNotFoundException(categoryId);
+        }
+
+        return categoryIds;
     }
 }

@@ -3,6 +3,7 @@ package com.gieokham.api.category.controller;
 import com.gieokham.api.auth.security.CustomOidcUser;
 import com.gieokham.api.category.domain.Category;
 import com.gieokham.api.category.dto.*;
+import com.gieokham.api.category.service.CategoryDeletionService;
 import com.gieokham.api.category.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 public class CategoryController {
 
     private final CategoryService categoryService;
+    private final CategoryDeletionService categoryDeletionService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -62,7 +64,7 @@ public class CategoryController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCategory(@PathVariable("categoryId") Long categoryId,
                                @AuthenticationPrincipal CustomOidcUser principal) {
-        categoryService.deleteCategory(categoryId, principal.getMemberId());
+        categoryDeletionService.deleteCategory(categoryId, principal.getMemberId());
     }
 
     @PatchMapping("/{categoryId}/move")

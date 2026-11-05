@@ -6,7 +6,9 @@ import com.gieokham.api.member.domain.Member;
 import com.gieokham.api.member.service.MemberService;
 import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.domain.MemoPriority;
-import com.gieokham.api.memo.dto.MemoSearchRequest;
+import com.gieokham.api.memo.domain.MemoRepeatType;
+import com.gieokham.api.memo.dto.*;
+import com.gieokham.api.memo.exception.InvalidMemoScheduleException;
 import com.gieokham.api.memo.exception.MemoNotFoundException;
 import com.gieokham.api.memo.repository.MemoRepository;
 import com.gieokham.api.memo.repository.MemoSpecification;
@@ -19,6 +21,9 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -29,21 +34,31 @@ public class MemoService {
     private final MemberService memberService;
 
     @Transactional
-    public Memo createMemo(Long memberId, String content, MemoPriority priority,
-                           Long categoryId) {
-        Member member = memberService.getMember(memberId);
+    public MemoResponse createMemo(Long memberId, MemoCreateRequest request) {
+        Member member = memberService.getMemberForUpdate(memberId);
 
-        Memo memo = new Memo(member, content, priority);
+        Memo memo = new Memo(member, request.getContent(), request.getPriority());
 
-        if (categoryId != null) {
-            Category category = categoryService.getCategory(categoryId, memberId);
+        //카테고리
+        if (request.getCategoryId() != null) {
+            Category category = categoryService.getCategory(request.getCategoryId(), memberId);
             memo.changeCategory(category);
         }
 
-        return memoRepository.save(memo);
+        //일정
+        memo.changeSchedule(
+                request.getStartDate(), request.getEndDate(), request.getStartTime(), request.getEndTime()
+        );
+        
+        //반복
+        memo.changeRepeat(
+                request.getRepeatType(), request.getRepeatDays(), request.getRepeatDayOfMonth(), request.getRepeatMonth()
+        );
+
+        return MemoResponse.from(memoRepository.save(memo));
     }
 
-    public Page<Memo> getMemos(Long memberId, MemoSearchRequest request) {
+    public MemoPageResponse getMemos(Long memberId, MemoSearchRequest request) {
         Sort sort = Sort.by(
                 Sort.Order.desc("createdAt"),
                 Sort.Order.desc("id")
@@ -55,15 +70,25 @@ public class MemoService {
                 sort
         );
 
+        Long categoryId = request.getCategoryId();
+        List<Long> categoryIds = List.of();
+
+        if (categoryId != null && categoryId > 0) {
+            categoryIds = categoryService.getSubtreeIds(categoryId, memberId);
+        }
+
         Specification<Memo> specification = MemoSpecification.search(
                 memberId,
                 request.getCompleted(),
                 request.getPriority(),
                 request.getKeyword(),
-                request.getCategoryId()
+                categoryId,
+                categoryIds
         );
 
-        return memoRepository.findAll(specification, pageable);
+
+        Page<Memo> memos = memoRepository.findAll(specification, pageable);
+        return MemoPageResponse.from(memos);
     }
 
     public Memo getMemo(Long memoId, Long memberId) {
@@ -71,19 +96,32 @@ public class MemoService {
                 .orElseThrow(() -> new MemoNotFoundException(memoId));
     }
 
+    public MemoResponse getMemoResponse(Long memoId, Long memberId) {
+        Memo memo = getMemo(memoId, memberId);
+        return MemoResponse.from(memo);
+    }
+
     @Transactional
-    public Memo updateMemo(Long memoId, Long memberId, String content, MemoPriority priority, Long categoryId) {
+    public MemoResponse updateMemo(Long memoId, Long memberId, MemoUpdateRequest request) {
+        memberService.getMemberForUpdate(memberId);
         Memo memo = getMemo(memoId, memberId);
 
-        if (categoryId != null) {
-            memo.changeCategory(categoryService.getCategory(categoryId, memberId));
+        if (request.getCategoryId() != null) {
+            memo.changeCategory(categoryService.getCategory(request.getCategoryId(), memberId));
         } else {
             memo.changeCategory(null);
         }
 
-        memo.update(content, priority);
+        memo.update(request.getContent(), request.getPriority());
 
-        return memo;
+        memo.changeSchedule(
+                request.getStartDate(),
+                request.getEndDate(),
+                request.getStartTime(),
+                request.getEndTime()
+        );
+
+        return MemoResponse.from(memo);
     }
 
     @Transactional
@@ -93,11 +131,51 @@ public class MemoService {
     }
 
     @Transactional
-    public Memo updateCompletion(Long memoId, Long memberId, boolean completed) {
-        Memo memo = getMemo(memoId, memberId);
-        memo.updateCompletion(completed);
+    public MemoResponse updateMemoCompletion(Long memoId, Long memberId, boolean completed) {
+        memberService.getMemberForUpdate(memberId);
 
-        return memo;
+        Memo memo = getMemo(memoId, memberId);
+
+        if (memo.getRepeatType() == MemoRepeatType.NONE) {
+            memo.updateMemoCompletion(completed);   //반복 아닌경우
+        } else {
+            if(completed){
+                memoRepository.insertCompletion(memoId, LocalDate.now());
+            } else {
+                memoRepository.deleteCompletion(memoId, LocalDate.now());
+            }
+        }
+
+        return MemoResponse.from(memo);
     }
 
+    @Transactional
+    public void deleteMemosByCategoryIds(Long memberId, List<Long> categoryIds) {
+        if (categoryIds.isEmpty()) {
+            return;
+        }
+
+        memoRepository.deleteByCategoryIds(memberId, categoryIds);
+    }
+
+    public List<Long> getCompletedRepeatMemoIdsToday(Long memberId) {
+        return memoRepository.findCompletedRepeatMemoIds(memberId, LocalDate.now());
+    }
+
+    public List<MemoResponse> getTodayMemos(Long memberId) {
+        LocalDate today = LocalDate.now();
+
+        List<Memo> memos = memoRepository.findTodayMemos(
+                memberId,
+                today,
+                today.getDayOfWeek().name(),
+                today.getMonthValue(),
+                today.getDayOfMonth(),
+                today.lengthOfMonth()
+        );
+
+        return memos.stream()
+                .map(MemoResponse::from)
+                .toList();
+    }
 }

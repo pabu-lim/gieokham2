@@ -19,6 +19,10 @@ public class CategoryResponse {
     private LocalDateTime updatedAt;
 
     public static CategoryResponse from(Category category) {
+        return from(category, null);
+    }
+
+    public static CategoryResponse from(Category category, Long memoCount) {
         return new CategoryResponse(
                 category.getId(),
                 category.getName(),

@@ -7,6 +7,7 @@ import com.gieokham.api.member.exception.MemberAlreadyRegisteredException;
 import com.gieokham.api.member.exception.MemberNotFoundException;
 import com.gieokham.api.memo.dto.ErrorResponse;
 import com.gieokham.api.memo.dto.ValidationErrorResponse;
+import com.gieokham.api.memo.exception.InvalidMemoScheduleException;
 import com.gieokham.api.memo.exception.MemoNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -80,5 +81,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInvalidCategoryPosition(InvalidCategoryPositionException exception) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(exception.getMessage()));
+    }
+
+    @ExceptionHandler(InvalidMemoScheduleException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidMemoScheduleException(InvalidMemoScheduleException exception) {
+        return new ErrorResponse(exception.getMessage());
     }
 }

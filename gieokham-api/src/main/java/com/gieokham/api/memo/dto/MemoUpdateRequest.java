@@ -1,6 +1,7 @@
 package com.gieokham.api.memo.dto;
 
 import com.gieokham.api.memo.domain.MemoPriority;
+import com.gieokham.api.memo.domain.MemoRepeatType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -8,6 +9,11 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.Set;
 
 @Getter
 @NoArgsConstructor
@@ -24,5 +30,15 @@ public class MemoUpdateRequest {
     @Positive(message = "카테고리 ID는 양수여야 합니다.")
     private Long categoryId;
 
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalTime startTime;
+    private LocalTime endTime;
 
+    @NotNull(message = "반복 유형을 선택해 주세요.")
+    private MemoRepeatType repeatType = MemoRepeatType.NONE;
+
+    private Set<@NotNull DayOfWeek> repeatDays;
+    private Integer repeatDayOfMonth;
+    private Integer repeatMonth;
 }
