@@ -121,18 +121,25 @@ public class Memo {
 
     public void changeSchedule(LocalDate startDate, LocalDate endDate, LocalTime startTime, LocalTime endTime) {
 
-        boolean hasTime = startTime != null || endTime != null;
-
-        if (hasTime) {
-            if (startDate == null || endDate == null || startTime == null || endTime == null) {
-                throw new InvalidMemoScheduleException("시간을 지정하면 시작·종료 일시를 모두 입력해야 합니다.");
-            }
-
-            if (endDate.atTime(endTime).isBefore(startDate.atTime(startTime))) {
-                throw new InvalidMemoScheduleException("종료 일시는 시작 일시보다 빠를 수 없습니다.");
-            }
-        } else if (endDate != null && (startDate == null || endDate.isBefore(startDate))) {
+        if (endDate != null && (startDate == null || endDate.isBefore(startDate))) {
             throw new InvalidMemoScheduleException("종료일을 지정하려면 시작일이 있어야 하고, 종료일은 시작일보다 빠를 수 없습니다.");
+        }
+
+        if (startTime != null || endTime != null) {
+            if (startDate == null || startTime == null) {
+                throw new InvalidMemoScheduleException("시간을 지정하면 시작일과 시작 시간을 입력해야 합니다.");
+            }
+            if (endDate == null && endTime != null) {
+                throw new InvalidMemoScheduleException("종료 시간을 지정하려면 기간으로 설정해야 합니다.");
+            }
+            if (endDate != null) {
+                if (endTime == null) {
+                    throw new InvalidMemoScheduleException("기간에 시간을 지정하면 종료 시간도 입력해야 합니다.");
+                }
+                if (endDate.atTime(endTime).isBefore(startDate.atTime(startTime))) {
+                    throw new InvalidMemoScheduleException("종료 일시는 시작 일시보다 빠를 수 없습니다.");
+                }
+            }
         }
 
         this.startDate = startDate;

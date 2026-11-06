@@ -109,9 +109,17 @@ export function validateMemo(m: MemoInput): string | null {
   if (m.endDate && (!m.startDate || m.endDate < m.startDate))
     return "종료일은 시작일보다 빠를 수 없습니다.";
   if (m.startTime || m.endTime) {
-    if (!m.startDate || !m.endDate || !m.startTime || !m.endTime)
-      return "시간을 지정하면 시작·종료 일시를 모두 입력해 주세요.";
-    if (`${m.endDate}T${m.endTime}` < `${m.startDate}T${m.startTime}`)
+    if (!m.startDate || !m.startTime)
+      return "시간을 지정하면 시작일과 시작 시간을 입력해 주세요.";
+    if (!m.endDate && m.endTime)
+      return "종료 시간을 지정하려면 기간으로 설정해 주세요.";
+    if (m.endDate && !m.endTime)
+      return "기간에 시간을 지정하면 종료 시간도 입력해 주세요.";
+    if (
+      m.endDate &&
+      m.endTime &&
+      `${m.endDate}T${m.endTime}` < `${m.startDate}T${m.startTime}`
+    )
       return "종료 일시는 시작 일시보다 빠를 수 없습니다.";
   }
   if (m.repeatType === "WEEKLY" && !m.repeatDays.length)

@@ -132,7 +132,29 @@ export function ScheduleFields({
         aria-label="일정 설정"
       >
         <div className="schedule-card-heading">
-          <span>일정</span>
+          <div className="schedule-heading-control">
+            <span>일정</span>{" "}
+            <label className="schedule-switch">
+              <input
+                type="checkbox"
+                aria-label="일자 지정"
+                checked={!!value.startDate}
+                onChange={(e) =>
+                  patch(
+                    e.target.checked
+                      ? { startDate: localDate() }
+                      : {
+                          startDate: null,
+                          endDate: null,
+                          startTime: null,
+                          endTime: null,
+                        },
+                  )
+                }
+              />
+              <span className="schedule-switch-track" />
+            </label>
+          </div>
           <span className="schedule-summary">
             {value.startDate
               ? range
@@ -142,26 +164,6 @@ export function ScheduleFields({
           </span>
         </div>
         <div className="schedule-switches">
-          <label className="schedule-switch">
-            <input
-              type="checkbox"
-              checked={!!value.startDate}
-              onChange={(e) =>
-                patch(
-                  e.target.checked
-                    ? { startDate: localDate() }
-                    : {
-                        startDate: null,
-                        endDate: null,
-                        startTime: null,
-                        endTime: null,
-                      },
-                )
-              }
-            />
-            <span className="schedule-switch-track" />
-            <span>일자 지정</span>
-          </label>
           {value.startDate && (
             <>
               <label className="schedule-switch">
@@ -171,8 +173,8 @@ export function ScheduleFields({
                   onChange={(e) =>
                     patch({
                       endDate: e.target.checked ? value.startDate : null,
-                      startTime: null,
-                      endTime: null,
+                      endTime:
+                        e.target.checked && timed ? value.startTime : null,
                     })
                   }
                 />
@@ -187,9 +189,8 @@ export function ScheduleFields({
                     patch(
                       e.target.checked
                         ? {
-                            endDate: value.endDate || value.startDate,
                             startTime: "09:00",
-                            endTime: "10:00",
+                            endTime: range ? "10:00" : null,
                           }
                         : { startTime: null, endTime: null },
                     )
@@ -240,16 +241,20 @@ export function ScheduleFields({
                     }
                   />
                 </label>
-                <label>
-                  종료 시간
-                  <input
-                    aria-label="종료 시간"
-                    type="time"
-                    required
-                    value={value.endTime?.slice(0, 5) || ""}
-                    onChange={(e) => patch({ endTime: e.target.value || null })}
-                  />
-                </label>
+                {range && (
+                  <label>
+                    종료 시간
+                    <input
+                      aria-label="종료 시간"
+                      type="time"
+                      required
+                      value={value.endTime?.slice(0, 5) || ""}
+                      onChange={(e) =>
+                        patch({ endTime: e.target.value || null })
+                      }
+                    />
+                  </label>
+                )}
               </>
             )}
           </div>
@@ -263,20 +268,24 @@ export function ScheduleFields({
         aria-label="반복 설정"
       >
         <div className="schedule-card-heading">
-          <span>반복</span>
+          <div className="schedule-heading-control">
+            <span>반복</span>{" "}
+            <label className="schedule-switch">
+              <input
+                type="checkbox"
+                aria-label="반복 설정"
+                checked={value.repeatType !== "NONE"}
+                onChange={(e) =>
+                  changeRepeat(e.target.checked ? "DAILY" : "NONE")
+                }
+              />
+              <span className="schedule-switch-track" />
+            </label>
+          </div>
           <span className="schedule-summary">
             {value.repeatType === "NONE" ? "반복 없음" : "반복 설정됨"}
           </span>
         </div>
-        <label className="schedule-switch">
-          <input
-            type="checkbox"
-            checked={value.repeatType !== "NONE"}
-            onChange={(e) => changeRepeat(e.target.checked ? "DAILY" : "NONE")}
-          />
-          <span className="schedule-switch-track" />
-          <span>반복 설정</span>
-        </label>
         {value.repeatType !== "NONE" && (
           <div className="repeat-options">
             <Choice

@@ -113,3 +113,20 @@ test("response serialization keeps only editable state and canonicalizes weekday
     "2시간 전",
   );
 });
+
+test("single-day time is independent of a period; incomplete timed periods are rejected", () => {
+  const memo = {
+    ...blankMemo(),
+    content: "점심",
+    startDate: "2026-11-06",
+    startTime: "12:00",
+  };
+  assert.equal(validateMemo(memo), null);
+  assert.ok(validateMemo({ ...memo, startDate: null }));
+  assert.ok(validateMemo({ ...memo, endTime: "13:00" }));
+  assert.ok(validateMemo({ ...memo, endDate: "2026-11-06" }));
+  assert.equal(
+    validateMemo({ ...memo, endDate: "2026-11-06", endTime: "12:00" }),
+    null,
+  );
+});
