@@ -147,6 +147,11 @@ public class MemoService {
                 request.getEndTime()
         );
 
+        memo.changeRepeat(
+                request.getRepeatType(), request.getRepeatDays(),
+                request.getRepeatDayOfMonth(), request.getRepeatMonth()
+        );
+
         return MemoResponse.from(memo);
     }
 
@@ -199,6 +204,7 @@ public class MemoService {
 
     @Transactional
     public void deleteMemo(Long memoId, Long memberId) {
+        memberService.getMemberForUpdate(memberId);
         Memo memo = getMemo(memoId, memberId);
         memoRepository.delete(memo);
     }

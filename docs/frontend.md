@@ -1,0 +1,136 @@
+# 기억함2 프론트엔드 실행 및 검증
+
+## 로컬 실행: IntelliJ + PowerShell
+
+Node.js 22.18 이상이 필요합니다. Node 24에서도 검증했습니다. Java는 기존 17을 그대로 사용합니다.
+
+1. 저장소의 `feat/react-frontend` 브랜치를 내려받습니다.
+
+```powershell
+git fetch origin
+git switch --track origin/feat/react-frontend
+```
+
+이미 로컬에 해당 브랜치가 있으면 `git switch feat/react-frontend` 후 `git pull`만 실행합니다.
+
+2. IntelliJ의 **Run → Edit Configurations → GieokhamApiApplication → Environment variables**에서 기존 DB/Google 환경변수를 유지하고 다음 값을 추가합니다.
+
+```text
+APP_FRONTEND_URL=http://localhost:5173/
+```
+
+기존 환경변수는 `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`입니다. `local` 프로필을 사용하면 `LOCAL_GOOGLE_SUB_A`, `LOCAL_GOOGLE_SUB_B`, 필요하면 `DB_PORT`도 유지합니다. VM options의 `-Duser.timezone=Asia/Seoul`도 유지합니다.
+
+**현재 local 프로필은 서버를 켤 때마다 DB를 초기화합니다. 실제 기록을 보존할 DB에서는 local 프로필을 사용하지 마세요.** 이 동작은 기존 백엔드 설정을 그대로 유지했습니다.
+
+3. IntelliJ에서 Spring 서버를 실행합니다. 기본 포트는 8080입니다.
+4. 별도 PowerShell에서 프론트를 실행합니다.
+
+```powershell
+cd gieokham-web
+npm ci
+npm run dev
+```
+
+`npm ci`는 잠금 파일에 지정된 라이브러리를 설치하고, `npm run dev`는 수정사항을 바로 반영하는 개발 서버를 실행합니다.
+
+5. 브라우저에서 **http://localhost:5173/** 을 엽니다. `127.0.0.1`과 `localhost`를 섞어 쓰지 마세요. 로그인 세션 쿠키를 같은 호스트에서 공유합니다.
+
+Vite가 `/api`, `/oauth2`, `/login` 요청을 Spring으로 전달합니다. Google의 승인된 리디렉션 URI는 기존 **http://localhost:8080/login/oauth2/code/google** 를 유지합니다. Google 인증 후에는 `APP_FRONTEND_URL`로 돌아옵니다. 프론트에는 Google client secret을 넣지 않습니다.
+
+API 포트가 다르면 프론트를 켜기 전에 `$env:API_TARGET="http://localhost:다른포트"`를 설정합니다. 이 경우 Google 리디렉션 URI도 실제 백엔드 주소에 맞춰야 합니다.
+
+## 한 서버로 패키징
+
+개발할 때는 두 프로세스로 수정사항을 빠르게 확인하고, 배포할 때는 Spring JAR 하나에 화면을 포함할 수 있습니다.
+
+저장소 루트에서:
+
+```powershell
+cd gieokham-web
+npm ci
+npm run build
+cd ..\gieokham-api
+.\gradlew.bat clean bootJar -PwithFrontend
+```
+
+`-PwithFrontend`가 React 빌드 결과를 JAR의 `static` 리소스로 복사합니다. 이 옵션이 없으면 기존 API 전용 빌드를 유지합니다. 빌드 결과 없이 옵션을 사용하면 안내와 함께 실패합니다.
+
+운영 환경에서는 `APP_FRONTEND_URL=/`로 설정하거나 환경변수를 제거합니다. JAR을 실행하면 같은 주소에서 화면과 API가 제공됩니다. DB는 별도로 실행합니다. 웹과 모바일용 서버를 나눌 필요는 없습니다.
+
+실제 배포 시에는 운영 DB, HTTPS, Google의 운영 콜백 주소, 세션 쿠키의 Secure 설정을 준비해야 합니다. 이번 작업에서는 배포하거나 main에 병합하지 않았습니다.
+
+## 코드 위치
+
+| 경로 | 역할 |
+| --- | --- |
+| `src/App.tsx` | 로그인, 가입, 세션 확인, 로그아웃, 계정 전환 |
+| `src/components/workspace.tsx` | 홈·목록·상세 편집·카테고리·사용자 동작 연결 |
+| `src/components/memo-fields.tsx` | 카테고리·중요도·일정·반복 입력 |
+| `src/lib/api.ts` | API 계약, CSRF 헤더, 오류 처리, 이전 계정 응답 차단 |
+| `src/lib/model.ts` | 타입, 입력 검증, 정렬·표시·카테고리 이동 계산 |
+| `src/lib/demo.ts` | 서버와 분리된 메모리 내 체험 데이터 |
+| `src/lib/encrypted-cache.ts` | 계정별 암호화 시작 사본, 키와 만료 처리 |
+| `src/hooks/use-touch-reorder.ts` | 길게 누르기, 손을 따라오는 드래그, 자동 스크롤 |
+| `src/styles.css`, `src/overrides.css` | 기억함1 스타일 및 API 버전 보완 |
+| `public/` | 기존 로고·앱 아이콘·PWA manifest·오프라인 안내 |
+
+카테고리 ID는 숫자입니다. 메모에 저장하는 미분류는 `null`, 목록 필터의 미분류는 기존 API 계약대로 `categoryId=0`입니다. 상세 저장은 수정 가능한 항목 전체를 PATCH 본문으로 보냅니다. 날짜는 서버의 한국 시간 정책을 따릅니다.
+
+커스텀 정렬은 전체와 카테고리에서 **같은 전역 순서**를 공유합니다. 프론트는 다음 메모 ID를 보내고, 서버 저장 후 목록을 다시 조회합니다. 마지막으로 보이는 행 다음에 아직 페이지가 있으면 그 행 아래로의 이동을 막아 잘못된 전역 맨 끝 이동을 방지합니다. 해당 행 위쪽으로는 이동할 수 있습니다.
+
+홈·중요·오늘은 현재 API에서 누락 없이 집계하기 위해 미완료 목록을 페이지 단위로 전부 읽습니다. 일반 목록은 30개씩 조회합니다. 기록이 크게 늘어나면 홈 집계 전용 API로 줄일 수 있습니다.
+
+## 빠른 시작과 계정 데이터
+
+- `/api/auth/me`로 확인된 회원 ID에 한해서 이전 홈 사본을 표시합니다. 서버 확인 전에는 수정하지 못합니다.
+- IndexedDB에 AES-GCM 암호문과 추출 불가능한 CryptoKey를 보관합니다. 평문 메모를 localStorage에 저장하지 않습니다.
+- 키 생성 후 24시간이 지나면 사본과 키를 삭제합니다. 열린 탭은 주기적으로 만료를 검사하고, 닫힌 탭의 데이터는 다음 접근 시 삭제합니다.
+- 변경 요청 전에는 이전 사본을 무효화합니다. 최신 홈을 조회하면 다시 저장합니다.
+- 로그아웃과 401 응답 시 키·사본·화면 상태를 비웁니다. 같은 출처의 다른 탭에도 로그아웃을 전달합니다.
+- 브라우저 저장소를 사용할 수 없으면 서버 조회로 계속 동작합니다. 암호화가 XSS나 실행 중인 브라우저 침해까지 방어하지는 않습니다.
+- **Vite 개발 모드에서는 사본 저장을 끕니다.** local DB 초기화로 회원 ID가 재사용되기 때문입니다. 운영 빌드에서 활성화됩니다.
+- 체험은 메모리만 사용하며 서버와 실제 계정 캐시에 접근하지 않습니다. 새로고침하면 체험 내용이 초기화됩니다.
+
+## 검증 현황
+
+```powershell
+cd gieokham-web
+npm test
+npm run build
+```
+
+2026-11-06 기준:
+
+| 검증 | 결과 |
+| --- | --- |
+| TypeScript 검사·Vite 운영 빌드 | 통과 |
+| 프론트 자동 테스트 13개 | 통과 |
+| PC: 체험 진입, 카테고리 선택, 한글 문자열 Enter 저장 | 브라우저 확인 |
+| PC: 상세 수정, 변경 취소 확인창, 저장 후 닫힘 | 브라우저 확인 |
+| PC: 반복 완료, 이력 조회, 완료 취소 | 브라우저 확인 |
+| 390px: 홈·카테고리·상세 패널, 메뉴 자동 닫힘 | 실제 앱을 iframe 안에서 확인 |
+| 한글 IME 조합 중 Enter, Shift+Enter | 조건 로직 자동 테스트. 실제 한글 키보드 조합은 별도 확인 필요 |
+| 암호화·계정 분리·만료·로그아웃 후 쓰기 경쟁 | fake-indexeddb와 Web Crypto 테스트 통과 |
+| Spring 빌드·DB·Google 로그인 종단 테스트 | 이 환경의 Gradle 다운로드 네트워크 제한으로 실행 못 함 |
+| 실제 갤럭시 터치 드래그·스와이프·스크롤 경계·PWA 설치 | 기기에서 확인 필요 |
+
+개발 서버의 `/tests/responsive-preview.html`에서 390px 배치를 볼 수 있습니다. 이 확인용 페이지는 운영 빌드에 포함되지 않습니다.
+
+로컬에서 마지막으로 확인할 순서:
+
+1. Google 로그인 → 기존 회원 홈 / 신규 회원 가입 화면 → 가입.
+2. 실제 API로 생성·편집·완료·취소·삭제. 특히 편집 후 매일/매주/매월/매년 반복 변경 확인.
+3. 계정 A에서 만든 데이터가 B에게 보이지 않는지 확인.
+4. 카테고리 하위 이동·순서 변경, 카테고리 삭제 시 자식과 메모까지 삭제 확인.
+5. 로그아웃 후 401, 재로그인, 세션 만료 시 로그인 화면 전환 확인.
+6. 운영 빌드에서 새로고침 시 사본 표시 → 서버 갱신과 로그아웃 후 IndexedDB 비움 확인.
+7. HTTPS 주소로 갤럭시에서 설치, 길게 누른 드래그, 상세 패널 스와이프 확인.
+
+## 보류 범위
+
+- 일반 완료 메모와 반복 완료 기록의 통합 목록: 일반 완료는 완료 탭, 반복 기록은 상세 패널에서 확인합니다.
+- 신규 가입 시 기본 카테고리·샘플 메모 자동 생성: 신규 회원은 빈 화면으로 시작합니다.
+- 백업·불러오기 및 기억함1 데이터 이전.
+
+원래 기억함 저장소와 운영 서비스는 변경하지 않습니다.
