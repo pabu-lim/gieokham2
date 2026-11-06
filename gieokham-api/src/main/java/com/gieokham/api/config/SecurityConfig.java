@@ -3,6 +3,7 @@ package com.gieokham.api.config;
 import com.gieokham.api.auth.security.CustomOidcUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +19,7 @@ import org.springframework.security.web.csrf.CsrfException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -32,6 +34,8 @@ public class SecurityConfig {
             HttpSecurity http,
             SecurityContextRepository securityContextRepository
     ) throws Exception {
+        log.info("Login success redirect URL: {}", frontendUrl);
+
         http
                 .securityContext(context ->
                         context.securityContextRepository(
