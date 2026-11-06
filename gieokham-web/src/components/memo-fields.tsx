@@ -53,39 +53,48 @@ export function CategoryPriority({
   categories: Category[];
   quick?: boolean;
 }) {
-  return (
+  const categoryField = (
+    <div className={!quick || value.content.trim() ? "has-value" : ""}>
+      <span>카테고리</span>
+      <Choice
+        label={quick ? "빠른 입력 카테고리" : "메모 카테고리"}
+        value={String(value.categoryId || 0)}
+        onChange={(v) => onChange({ ...value, categoryId: Number(v) || null })}
+        options={[
+          ["0", "미분류"],
+          ...categoryTree(categories).map(
+            (c) =>
+              [
+                String(c.id),
+                categoryPath(categories, c.id)
+                  .map((p) => p.name)
+                  .join(" › "),
+              ] as [string, string],
+          ),
+        ]}
+      />
+    </div>
+  );
+  const priorityField = (
+    <div className={!quick || value.content.trim() ? "has-value" : ""}>
+      <span>중요도</span>
+      <Choice
+        label={quick ? "빠른 입력 중요도" : "메모 중요도"}
+        value={value.priority}
+        onChange={(v) => onChange({ ...value, priority: v as Priority })}
+        options={priorities}
+      />
+    </div>
+  );
+  return quick ? (
     <>
-      <div className={!quick || value.content.trim() ? "has-value" : ""}>
-        <span>카테고리</span>
-        <Choice
-          label={quick ? "빠른 입력 카테고리" : "메모 카테고리"}
-          value={String(value.categoryId || 0)}
-          onChange={(v) =>
-            onChange({ ...value, categoryId: Number(v) || null })
-          }
-          options={[
-            ["0", "미분류"],
-            ...categoryTree(categories).map(
-              (c) =>
-                [
-                  String(c.id),
-                  categoryPath(categories, c.id)
-                    .map((p) => p.name)
-                    .join(" › "),
-                ] as [string, string],
-            ),
-          ]}
-        />
-      </div>
-      <div className={!quick || value.content.trim() ? "has-value" : ""}>
-        <span>중요도</span>
-        <Choice
-          label={quick ? "빠른 입력 중요도" : "메모 중요도"}
-          value={value.priority}
-          onChange={(v) => onChange({ ...value, priority: v as Priority })}
-          options={priorities}
-        />
-      </div>
+      {categoryField}
+      {priorityField}
+    </>
+  ) : (
+    <>
+      {priorityField}
+      {categoryField}
     </>
   );
 }
