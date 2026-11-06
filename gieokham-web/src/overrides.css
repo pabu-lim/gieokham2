@@ -288,3 +288,40 @@
 .schedule-heading-control .schedule-switch {
   margin: 0;
 }
+
+.editor .memo-notes-field {
+  display: block;
+  padding: 16px;
+  margin: 16px 0;
+  border: 1px solid #e3e8f1;
+  border-radius: 12px;
+  background: #fff;
+  color: #43546d;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: inset 0 2px 0 #e3e8f1;
+}
+.editor .memo-notes-field.has-value {
+  box-shadow: inset 0 3px 0 var(--filled-accent, #e9ac78);
+}
+.memo-notes-field.has-value .memo-notes-label::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--filled-dot, #d99053);
+  vertical-align: middle;
+}
+.memo-notes-field .optional-label {
+  color: #8b97a9;
+  font-weight: 400;
+}
+.editor .memo-notes-field textarea {
+  min-height: 120px;
+  line-height: 1.7;
+  font-weight: 400;
+  border-color: #dce4ef;
+  box-shadow: none;
+}

@@ -49,3 +49,19 @@ test("category deletion removes the full subtree and memos but preserves unrelat
   await assert.rejects(demo.memo(m.id));
   assert.equal((await demo.memo(keep.id)).content, "미분류");
 });
+
+test("notes can be saved, reopened and cleared without changing memo content", async () => {
+  const demo = createDemoApi();
+  const memo = await demo.createMemo({
+    ...blankMemo(),
+    content: "면접",
+    notes: "신분증\nhttps://example.com",
+  });
+  assert.equal((await demo.memo(memo.id)).notes, memo.notes);
+  await demo.updateMemo(memo.id, { ...memo, notes: "준비물 변경" });
+  assert.equal((await demo.memo(memo.id)).notes, "준비물 변경");
+  await demo.updateMemo(memo.id, { ...memo, notes: "" });
+  const saved = await demo.memo(memo.id);
+  assert.equal(saved.notes, "");
+  assert.equal(saved.content, "면접");
+});

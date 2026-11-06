@@ -22,6 +22,7 @@ public class MemoResponse {
 
     private Long id;
     private String content;
+    private String notes;
     private MemoPriority priority;
     private Long categoryId;
     private  LocalDateTime completedAt;
@@ -40,6 +41,7 @@ public class MemoResponse {
         return new MemoResponse(
                 memo.getId(),
                 memo.getContent(),
+                memo.getNotes(),
                 memo.getPriority(),
                 memo.getCategory() != null ? memo.getCategory().getId() : null,
                 memo.getCompletedAt(),

@@ -41,6 +41,7 @@ public class MemoService {
         Member member = memberService.getMemberForUpdate(memberId);
 
         Memo memo = new Memo(member, request.getContent(), request.getPriority());
+        memo.changeNotes(request.getNotes());
 
         //카테고리
         if (request.getCategoryId() != null) {
@@ -139,6 +140,7 @@ public class MemoService {
         }
 
         memo.update(request.getContent(), request.getPriority());
+        memo.changeNotes(request.getNotes());
 
         memo.changeSchedule(
                 request.getStartDate(),

@@ -77,6 +77,7 @@ CREATE TABLE memo (
     id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     member_id    BIGINT NOT NULL,
     content      VARCHAR(10000) NOT NULL,
+    notes        VARCHAR(10000),
     priority     VARCHAR(20) NOT NULL DEFAULT 'MEDIUM',
     category_id  BIGINT,
     start_date DATE,

@@ -11,6 +11,7 @@ export type Day =
   | "SUNDAY";
 export interface MemoInput {
   content: string;
+  notes: string | null;
   priority: Priority;
   categoryId: number | null;
   startDate: string | null;
@@ -75,6 +76,7 @@ export const localDate = (date = new Date()) =>
 export function blankMemo(categoryId: number | null = null): MemoInput {
   return {
     content: "",
+    notes: "",
     priority: "MEDIUM",
     categoryId,
     startDate: null,
@@ -90,6 +92,7 @@ export function blankMemo(categoryId: number | null = null): MemoInput {
 export function editable(m: MemoInput): MemoInput {
   return {
     content: m.content,
+    notes: m.notes ?? "",
     priority: m.priority,
     categoryId: m.categoryId,
     startDate: m.startDate,
@@ -106,6 +109,8 @@ export function validateMemo(m: MemoInput): string | null {
   if (!m.content.trim()) return "메모 내용을 입력해 주세요.";
   if (m.content.length > 10000)
     return "메모는 10,000자까지 입력할 수 있습니다.";
+  if ((m.notes?.length ?? 0) > 10000)
+    return "추가 메모는 10,000자까지 입력할 수 있습니다.";
   if (m.endDate && (!m.startDate || m.endDate < m.startDate))
     return "종료일은 시작일보다 빠를 수 없습니다.";
   if (m.startTime || m.endTime) {

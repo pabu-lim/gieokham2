@@ -827,6 +827,11 @@ export function Workspace({
               </span>
             )}
           </span>
+          {!compact && m.notes?.trim() && (
+            <span className="task-notes-preview">
+              {m.notes.trim().split(/\r?\n/)[0]}
+            </span>
+          )}
         </button>
         <div className="task-trailing">
           <span className={"priority p" + label}>{label}</span>
@@ -1464,6 +1469,25 @@ export function Workspace({
                     value={draft.content}
                     onChange={(e) =>
                       setDraft({ ...draft, content: e.target.value })
+                    }
+                  />
+                </label>
+                <label
+                  className={
+                    "memo-notes-field" +
+                    (draft.notes?.trim() ? " has-value" : "")
+                  }
+                >
+                  <span className="memo-notes-label">
+                    추가 메모 <span className="optional-label">(선택)</span>
+                  </span>
+                  <textarea
+                    aria-label="추가 메모"
+                    placeholder="설명, 준비할 것, 링크 등을 자유롭게 적어보세요."
+                    maxLength={10000}
+                    value={draft.notes ?? ""}
+                    onChange={(e) =>
+                      setDraft({ ...draft, notes: e.target.value })
                     }
                   />
                 </label>

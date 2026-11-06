@@ -130,3 +130,14 @@ test("single-day time is independent of a period; incomplete timed periods are r
     null,
   );
 });
+
+test("optional notes survive edit serialization, detect changes and enforce their own limit", () => {
+  const memo = { ...blankMemo(), content: "지원서 제출" };
+  assert.equal(validateMemo({ ...memo, notes: null }), null);
+  const notes = "준비물\nhttps://example.com";
+  assert.equal(editable({ ...memo, notes }).notes, notes);
+  assert.notDeepEqual(editable(memo), editable({ ...memo, notes }));
+  assert.equal(editable({ ...memo, notes: null }).notes, "");
+  assert.equal(validateMemo({ ...memo, notes: "가".repeat(10000) }), null);
+  assert.ok(validateMemo({ ...memo, notes: "가".repeat(10001) }));
+});

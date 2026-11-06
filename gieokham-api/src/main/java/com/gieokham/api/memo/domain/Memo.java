@@ -22,6 +22,9 @@ public class Memo {
     @Column(nullable = false, length = 10000)
     private String content;
 
+    @Column(length = 10000)
+    private String notes;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private MemoPriority priority = MemoPriority.MEDIUM;
@@ -113,6 +116,10 @@ public class Memo {
 
     public void changeSortOrder(int sortOrder) {
         this.sortOrder = sortOrder;
+    }
+
+    public void changeNotes(String notes) {
+        this.notes = notes;
     }
 
     public void changeCategory(Category category) {
