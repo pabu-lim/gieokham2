@@ -87,6 +87,7 @@ CREATE TABLE memo (
     repeat_day_of_month INTEGER,
     repeat_month        INTEGER,
     completed_at TIMESTAMP,
+    sort_order INTEGER NOT NULL DEFAULT 0,
     created_at   TIMESTAMP NOT NULL
                  DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul'),
     updated_at   TIMESTAMP NOT NULL

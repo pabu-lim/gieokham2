@@ -11,15 +11,18 @@ import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.domain.MemoPriority;
 import com.gieokham.api.memo.domain.MemoRepeatType;
 import com.gieokham.api.memo.repository.MemoRepository;
+import com.gieokham.api.memo.repository.MemoSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -96,7 +99,11 @@ public class LocalDataInitializer implements ApplicationRunner {
         Memo paydayMemo = new Memo(memberA, "월급 확인", MemoPriority.MEDIUM);
         paydayMemo.changeCategory(categories.get("일정"));
         paydayMemo.changeRepeat(MemoRepeatType.MONTHLY, Set.of(), 25, null);
+
         memoRepository.save(paydayMemo);
+
+        initializeMemoOrder(memberA);
+        initializeMemoOrder(memberB);
     }
 
     private Map<String, Category> createCategories(Member member) {
@@ -122,5 +129,18 @@ public class LocalDataInitializer implements ApplicationRunner {
         memo.changeCategory(category);
 
         memoRepository.save(memo);
+    }
+
+    private void initializeMemoOrder(Member member) {
+        Specification<Memo> specification = (root, query, cb) ->
+                cb.equal(root.get("member").get("id"), member.getId());
+
+        List<Memo> memos = memoRepository.findAll(
+                specification.and(MemoSpecification.orderByPriority())
+        );
+
+        for (int i = 0; i < memos.size(); i++) {
+            memos.get(i).changeSortOrder(i);
+        }
     }
 }

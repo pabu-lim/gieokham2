@@ -56,4 +56,28 @@ public class MemoSpecification {
             return cb.and(predicates);
         });
     }
+
+    public static Specification<Memo> orderByPriority() {
+        return (root, query, cb) -> {
+            // 페이지의 전체 개수를 구하는 COUNT 쿼리에는 정렬 제외
+            if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+
+                var priorityOrder = cb.<Integer>selectCase()
+                        .when(cb.equal(root.get("priority"), MemoPriority.HIGHEST), 0)
+                        .when(cb.equal(root.get("priority"), MemoPriority.HIGH), 1)
+                        .when(cb.equal(root.get("priority"), MemoPriority.MEDIUM), 2)
+                        .when(cb.equal(root.get("priority"), MemoPriority.LOW), 3)
+                        .when(cb.equal(root.get("priority"), MemoPriority.LOWEST), 4)
+                        .otherwise(5);
+
+                query.orderBy(
+                        cb.asc(priorityOrder),
+                        cb.desc(root.get("createdAt")),
+                        cb.desc(root.get("id"))
+                );
+            }
+
+            return cb.conjunction();
+        };
+    }
 }

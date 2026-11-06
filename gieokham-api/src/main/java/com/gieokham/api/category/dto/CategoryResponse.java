@@ -17,6 +17,7 @@ public class CategoryResponse {
     private int sortOrder;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private Long memoCount;
 
     public static CategoryResponse from(Category category) {
         return from(category, null);
@@ -31,7 +32,8 @@ public class CategoryResponse {
                         : null,
                 category.getSortOrder(),
                 category.getCreatedAt(),
-                category.getUpdatedAt()
+                category.getUpdatedAt(),
+                memoCount
         );
     }
 }

@@ -2,6 +2,7 @@ package com.gieokham.api.memo.repository;
 
 import com.gieokham.api.category.dto.CategoryMemoCountDto;
 import com.gieokham.api.memo.domain.Memo;
+import com.gieokham.api.memo.domain.MemoPriority;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -125,5 +126,75 @@ public interface MemoRepository extends JpaRepository<Memo, Long>, JpaSpecificat
         """)
     List<CategoryMemoCountDto> countActiveMemosByCategory(
             @Param("memberId") Long memberId
+    );
+
+    @Query("""
+        select min(m.sortOrder)
+        from Memo m
+        where m.member.id = :memberId
+          and m.priority = :priority
+        """)
+    Integer findFirstSortOrderByPriority(
+            @Param("memberId") Long memberId,
+            @Param("priority") MemoPriority priority
+    );
+
+    @Query("""
+        select min(m.sortOrder)
+        from Memo m
+        where m.member.id = :memberId
+          and m.priority in :priorities
+        """)
+    Integer findFirstSortOrderByPriorities(
+            @Param("memberId") Long memberId,
+            @Param("priorities") List<MemoPriority> priorities
+    );
+
+    @Query("""
+        select coalesce(max(m.sortOrder), -1) + 1
+        from Memo m
+        where m.member.id = :memberId
+        """)
+    int findNextSortOrder(@Param("memberId") Long memberId);
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+        update Memo m
+        set m.sortOrder = m.sortOrder + 1
+        where m.member.id = :memberId
+          and m.sortOrder >= :sortOrder
+        """)
+    int shiftSortOrdersForInsert(
+            @Param("memberId") Long memberId,
+            @Param("sortOrder") int sortOrder
+    );
+
+    @Modifying(flushAutomatically = true)
+    @Query("""
+        update Memo m
+        set m.sortOrder = m.sortOrder + :offset
+        where m.member.id = :memberId
+          and m.id <> :memoId
+          and m.sortOrder between :startOrder and :endOrder
+        """)
+    int shiftSortOrdersForMove(
+            @Param("memberId") Long memberId,
+            @Param("memoId") Long memoId,
+            @Param("startOrder") int startOrder,
+            @Param("endOrder") int endOrder,
+            @Param("offset") int offset
+    );
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+        update Memo m
+        set m.sortOrder = :sortOrder
+        where m.member.id = :memberId
+          and m.id = :memoId
+        """)
+    int updateSortOrder(
+            @Param("memberId") Long memberId,
+            @Param("memoId") Long memoId,
+            @Param("sortOrder") int sortOrder
     );
 }

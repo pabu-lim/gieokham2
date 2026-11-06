@@ -1,9 +1,9 @@
 package com.gieokham.api.memo.dto;
 
 import com.gieokham.api.memo.domain.MemoPriority;
+import com.gieokham.api.memo.domain.MemoSortType;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,4 +26,6 @@ public class MemoSearchRequest {
     @Min(value = 1, message = "페이지 크기는 1 이상이어야 합니다.")
     @Max(value = 100, message = "페이지 크기는 100 이하여야 합니다.")
     private int size = 20;
+
+    private MemoSortType sort = MemoSortType.CUSTOM;
 }

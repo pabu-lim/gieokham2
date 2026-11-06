@@ -5,12 +5,16 @@ import com.gieokham.api.memo.domain.Memo;
 import com.gieokham.api.memo.dto.*;
 import com.gieokham.api.memo.service.MemoService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -71,4 +75,44 @@ public class MemoController {
         return memoService.getTodayMemos(principal.getMemberId());
     }
 
+    @PatchMapping("/{memoId}/move")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void moveMemo(
+            @PathVariable Long memoId,
+            @AuthenticationPrincipal CustomOidcUser principal,
+            @Valid @RequestBody MemoMoveRequest request
+    ) {
+        memoService.moveMemo(memoId, principal.getMemberId(), request);
+    }
+
+    @GetMapping("/{memoId}/completions")
+    public List<MemoCompletionResponse> getMemoCompletions(
+            @PathVariable Long memoId,
+            @AuthenticationPrincipal CustomOidcUser principal,
+            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size
+    ) {
+        return memoService.getMemoCompletions(
+                memoId,
+                principal.getMemberId(),
+                page,
+                size
+        );
+    }
+
+    @DeleteMapping("/{memoId}/completions/{scheduledDate}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteMemoCompletion(
+            @PathVariable Long memoId,
+            @PathVariable
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate scheduledDate,
+            @AuthenticationPrincipal CustomOidcUser principal
+    ) {
+        memoService.deleteMemoCompletion(
+                memoId,
+                principal.getMemberId(),
+                scheduledDate
+        );
+    }
 }

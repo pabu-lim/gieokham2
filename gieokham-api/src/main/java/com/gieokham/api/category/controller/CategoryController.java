@@ -4,6 +4,7 @@ import com.gieokham.api.auth.security.CustomOidcUser;
 import com.gieokham.api.category.domain.Category;
 import com.gieokham.api.category.dto.*;
 import com.gieokham.api.category.service.CategoryDeletionService;
+import com.gieokham.api.category.service.CategoryQueryService;
 import com.gieokham.api.category.service.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +22,7 @@ public class CategoryController {
 
     private final CategoryService categoryService;
     private final CategoryDeletionService categoryDeletionService;
+    private final CategoryQueryService categoryQueryService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -33,9 +35,7 @@ public class CategoryController {
 
     @GetMapping
     public List<CategoryResponse> getCategories(@AuthenticationPrincipal CustomOidcUser principal) {
-        return categoryService.getCategories(principal.getMemberId()).stream()
-                .map(CategoryResponse::from)
-                .toList();
+        return categoryQueryService.getCategories(principal.getMemberId());
     }
 
     @GetMapping("/options")

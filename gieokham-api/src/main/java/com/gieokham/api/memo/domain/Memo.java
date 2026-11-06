@@ -65,6 +65,9 @@ public class Memo {
     @Column(name = "repeat_month")
     private Integer repeatMonth;
 
+    @Column(name = "sort_order", nullable = false)
+    private int sortOrder;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -106,6 +109,10 @@ public class Memo {
           this.completedAt = null;
         }
 
+    }
+
+    public void changeSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public void changeCategory(Category category) {
