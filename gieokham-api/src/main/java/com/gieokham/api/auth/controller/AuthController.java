@@ -48,7 +48,7 @@ public class AuthController {
             );
         }
 
-        return Map.of("registered", true, "memberId", memberId);
+        return registeredMember(memberService.getMember(memberId));
     }
 
     @GetMapping("/csrf")
@@ -76,7 +76,11 @@ public class AuthController {
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of("registered", true, "memberId", member.getId()));
+                .body(registeredMember(member));
+    }
+
+    private Map<String, Object> registeredMember(Member member) {
+        return Map.of("registered", true, "memberId", member.getId(), "nickname", member.getNickname());
     }
 
     private void updateAuthentication(CustomOidcUser principal, Long memberId, HttpServletRequest request, HttpServletResponse response) {

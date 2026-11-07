@@ -213,7 +213,11 @@ export function createDemoApi() {
       memos = memos.filter((m) => !deleted.has(m.id));
       history = history.filter((h) => !deleted.has(h.memoId));
     },
-    me: async () => ({ registered: true, memberId: -1 }),
+    me: async () => ({
+      registered: true,
+      memberId: -1,
+      nickname: "체험 사용자",
+    }),
     signup: async () => {
       throw Error("체험 공간에서는 가입할 수 없습니다.");
     },

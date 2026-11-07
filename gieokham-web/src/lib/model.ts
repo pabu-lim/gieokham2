@@ -50,7 +50,7 @@ export interface Page<T> {
   hasNext: boolean;
 }
 export type Member =
-  | { registered: true; memberId: number }
+  | { registered: true; memberId: number; nickname: string }
   | { registered: false; name: string; nameEditable: boolean };
 export const priorities: [Priority, string][] = [
   ["HIGHEST", "최상 · 긴급해요"],

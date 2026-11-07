@@ -145,9 +145,11 @@ export function Workspace({
   onExit,
   onDemo,
   memberId,
+  nickname,
 }: {
   client: typeof api;
   memberId?: number;
+  nickname?: string;
   demo: boolean;
   onExit: () => void | Promise<void>;
   onDemo: () => void;
@@ -740,7 +742,7 @@ export function Workspace({
     }
     endDrag();
   }
-  function row(m: Memo, compact = false) {
+  function row(m: Memo, compact = false, showStatus = false) {
     const done =
       m.repeatType === "NONE" ? !!m.completedAt : doneToday.includes(m.id);
     const label = priorityLabel(m.priority);
@@ -801,48 +803,64 @@ export function Workspace({
           className={compact ? "home-memory-content" : "task-body"}
           onClick={() => open(m)}
         >
-          {compact && state && (
+          {showStatus && state && (
             <span className={"home-status " + state.tone}>{state.label}</span>
           )}
           <span className={compact ? "home-memory-title" : "task-title"}>
             {m.content}
           </span>
-          <span className="task-meta">
-            {!view.startsWith("cat:") && view !== "uncategorized" && (
-              <span>
-                {categories.find((c) => c.id === m.categoryId)?.name ||
-                  "미분류"}
-              </span>
-            )}
-            {m.startDate && (
-              <span className={state?.tone === "overdue" ? "overdue" : ""}>
-                {scheduleLabel(m)}
-              </span>
-            )}
-            {m.repeatType !== "NONE" && (
-              <span>
-                <Repeat2 size={12} />
-                {repeatLabel(m)}
-                {done ? " · 오늘 완료" : ""}
-              </span>
-            )}
-          </span>
+          {compact ? (
+            <span className="home-memory-meta">
+              {[
+                categories.find((c) => c.id === m.categoryId)?.name || "미분류",
+                m.startDate && scheduleLabel(m),
+                m.notes?.trim() && "추가 메모",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </span>
+          ) : (
+            <span className="task-meta">
+              {!view.startsWith("cat:") && view !== "uncategorized" && (
+                <span>
+                  {categories.find((c) => c.id === m.categoryId)?.name ||
+                    "미분류"}
+                </span>
+              )}
+              {m.startDate && (
+                <span className={state?.tone === "overdue" ? "overdue" : ""}>
+                  {scheduleLabel(m)}
+                </span>
+              )}
+              {m.repeatType !== "NONE" && (
+                <span>
+                  <Repeat2 size={12} />
+                  {repeatLabel(m)}
+                  {done ? " · 오늘 완료" : ""}
+                </span>
+              )}
+            </span>
+          )}
           {!compact && m.notes?.trim() && (
             <span className="task-notes-preview">
               {m.notes.trim().split(/\r?\n/)[0]}
             </span>
           )}
         </button>
-        <div className="task-trailing">
+        {compact ? (
           <span className={"priority p" + label}>{label}</span>
-          <time
-            className="task-time"
-            dateTime={m.createdAt + "+09:00"}
-            title={exactTime(m.createdAt)}
-          >
-            {createdLabel(m.createdAt, now)}
-          </time>
-        </div>
+        ) : (
+          <div className="task-trailing">
+            <span className={"priority p" + label}>{label}</span>
+            <time
+              className="task-time"
+              dateTime={m.createdAt + "+09:00"}
+              title={exactTime(m.createdAt)}
+            >
+              {createdLabel(m.createdAt, now)}
+            </time>
+          </div>
+        )}
       </article>
     );
   }
@@ -1068,14 +1086,27 @@ export function Workspace({
           <div className="top-context">
             <SidebarTrigger aria-label="메뉴 열기" />
             <span>나의 기록</span>
-            <span>/</span>
+            <span className="slash">/</span>
             <strong>{title}</strong>
           </div>
           <div className="account-area">
             <span className="top-date">
               {localDate().replaceAll("-", ".")} ·{" "}
-              {busy ? "저장 중" : demo ? "체험 공간" : "기억함"}
+              {demo
+                ? "체험 공간"
+                : error
+                  ? "동기화 실패"
+                  : busy
+                    ? "저장 중"
+                    : loading || cached
+                      ? "최신 기록 확인 중"
+                      : "동기화됨"}
             </span>
+            {!demo && nickname && (
+              <span className="account-email" title={nickname}>
+                {nickname}
+              </span>
+            )}
             <button
               className="logout-button"
               disabled={busy}
@@ -1234,11 +1265,15 @@ export function Workspace({
                           지금 챙길 기억 <span>{attentionMemos.length}</span>
                         </h2>
                       </div>
+                      <span className="home-today">
+                        {new Date(now).getMonth() + 1}월{" "}
+                        {new Date(now).getDate()}일
+                      </span>
                     </header>
                     {attentionMemos.length ? (
                       attentionMemos
                         .slice(0, showAllAttention ? undefined : 6)
-                        .map(({ memo }) => row(memo, true))
+                        .map(({ memo }) => row(memo, true, true))
                     ) : (
                       <div className="home-empty">
                         <Sun size={28} />

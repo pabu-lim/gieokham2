@@ -134,6 +134,7 @@ export default function App() {
         key={member.memberId}
         client={api}
         memberId={member.memberId}
+        nickname={member.nickname}
         demo={false}
         onExit={logout}
         onDemo={enterDemo}
