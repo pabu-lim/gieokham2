@@ -24,6 +24,9 @@ public class MemoCreateRequest {
         @Size(max = 10000, message = "메모는 10,000자까지 입력할 수 있습니다.")
         private String content;
 
+    @Size(max = 10000, message = "추가 메모는 10,000자까지 입력할 수 있습니다.")
+    private String notes;
+
         private MemoPriority priority;
 
         @Positive(message = "카테고리 ID는 양수여야 합니다.")

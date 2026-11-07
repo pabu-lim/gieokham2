@@ -24,6 +24,9 @@ public class MemoUpdateRequest {
     @Size(max = 10000, message = "메모는 10,000자까지 입력할 수 있습니다.")
     private String content;
 
+    @Size(max = 10000, message = "추가 메모는 10,000자까지 입력할 수 있습니다.")
+    private String notes;
+
     @NotNull(message = "중요도를 선택해 주세요.")
     private MemoPriority priority;
 

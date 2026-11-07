@@ -41,6 +41,7 @@ public class MemoService {
         Member member = memberService.getMemberForUpdate(memberId);
 
         Memo memo = new Memo(member, request.getContent(), request.getPriority());
+        memo.changeNotes(request.getNotes());
 
         //카테고리
         if (request.getCategoryId() != null) {
@@ -139,12 +140,18 @@ public class MemoService {
         }
 
         memo.update(request.getContent(), request.getPriority());
+        memo.changeNotes(request.getNotes());
 
         memo.changeSchedule(
                 request.getStartDate(),
                 request.getEndDate(),
                 request.getStartTime(),
                 request.getEndTime()
+        );
+
+        memo.changeRepeat(
+                request.getRepeatType(), request.getRepeatDays(),
+                request.getRepeatDayOfMonth(), request.getRepeatMonth()
         );
 
         return MemoResponse.from(memo);
@@ -199,6 +206,7 @@ public class MemoService {
 
     @Transactional
     public void deleteMemo(Long memoId, Long memberId) {
+        memberService.getMemberForUpdate(memberId);
         Memo memo = getMemo(memoId, memberId);
         memoRepository.delete(memo);
     }

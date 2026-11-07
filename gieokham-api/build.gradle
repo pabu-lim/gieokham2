@@ -38,3 +38,16 @@ dependencies {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+// Build gieokham-web first with npm ci && npm run build.
+// Only include the static frontend when explicitly packaging the combined app.
+if (project.hasProperty('withFrontend')) {
+    tasks.named('processResources') {
+        doFirst {
+            if (!file('../gieokham-web/dist/index.html').exists()) {
+                throw new GradleException('Build gieokham-web before using -PwithFrontend')
+            }
+        }
+        from('../gieokham-web/dist') { into 'static' }
+    }
+}
