@@ -4,41 +4,9 @@
 
 Node.js 22.18 이상이 필요합니다. Node 24에서도 검증했습니다. Java는 기존 17을 그대로 사용합니다.
 
-1. 저장소의 `feat/react-frontend` 브랜치를 내려받습니다.
+준비물, 개발 전용 DB 생성, Google OAuth 설정, IntelliJ 환경변수, 서버 실행 순서는 [README의 로컬 실행 방법](../README.md#로컬-실행-방법)을 따릅니다.
 
-```powershell
-git fetch origin
-git switch --track origin/feat/react-frontend
-```
-
-이미 로컬에 해당 브랜치가 있으면 `git switch feat/react-frontend` 후 `git pull`만 실행합니다.
-
-2. IntelliJ의 **Run → Edit Configurations → GieokhamApiApplication → Environment variables**에서 기존 DB/Google 환경변수를 유지하고 다음 값을 추가합니다.
-
-```text
-APP_FRONTEND_URL=http://localhost:5173/
-```
-
-기존 환경변수는 `DB_PASSWORD`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`입니다. `local` 프로필을 사용하면 `LOCAL_GOOGLE_SUB_A`, `LOCAL_GOOGLE_SUB_B`, 필요하면 `DB_PORT`도 유지합니다. VM options의 `-Duser.timezone=Asia/Seoul`도 유지합니다.
-
-**현재 local 프로필은 서버를 켤 때마다 DB를 초기화합니다. 실제 기록을 보존할 DB에서는 local 프로필을 사용하지 마세요.** 이 동작은 기존 백엔드 설정을 그대로 유지했습니다.
-
-3. IntelliJ에서 Spring 서버를 실행합니다. 기본 포트는 8080입니다.
-4. 별도 PowerShell에서 프론트를 실행합니다.
-
-```powershell
-cd gieokham-web
-npm ci
-npm run dev
-```
-
-`npm ci`는 잠금 파일에 지정된 라이브러리를 설치하고, `npm run dev`는 수정사항을 바로 반영하는 개발 서버를 실행합니다.
-
-5. 브라우저에서 **http://localhost:5173/** 을 엽니다. `127.0.0.1`과 `localhost`를 섞어 쓰지 마세요. 로그인 세션 쿠키를 같은 호스트에서 공유합니다.
-
-Vite가 `/api`, `/oauth2`, `/login` 요청을 Spring으로 전달합니다. Google의 승인된 리디렉션 URI는 기존 **http://localhost:8080/login/oauth2/code/google** 를 유지합니다. Google 인증 후에는 `APP_FRONTEND_URL`로 돌아옵니다. 프론트에는 Google client secret을 넣지 않습니다.
-
-API 포트가 다르면 프론트를 켜기 전에 `$env:API_TARGET="http://localhost:다른포트"`를 설정합니다. 이 경우 Google 리디렉션 URI도 실제 백엔드 주소에 맞춰야 합니다.
+기본 포트는 React 5173, Spring 8080입니다. Spring 포트를 변경했다면 프론트를 켜기 전에 PowerShell에서 `$env:API_TARGET="http://localhost:변경한포트"`를 설정하고, Google 승인 리디렉션 URI의 포트도 맞춥니다.
 
 ## 한 서버로 패키징
 
@@ -58,7 +26,7 @@ cd ..\gieokham-api
 
 운영 환경에서는 `APP_FRONTEND_URL=/`로 설정하거나 환경변수를 제거합니다. JAR을 실행하면 같은 주소에서 화면과 API가 제공됩니다. DB는 별도로 실행합니다. 웹과 모바일용 서버를 나눌 필요는 없습니다.
 
-실제 배포 시에는 운영 DB, HTTPS, Google의 운영 콜백 주소, 세션 쿠키의 Secure 설정을 준비해야 합니다. 이번 작업에서는 배포하거나 main에 병합하지 않았습니다.
+실제 배포 시에는 운영 DB, HTTPS, Google의 운영 콜백 주소, 세션 쿠키의 Secure 설정을 준비해야 합니다. 이 명령은 패키징만 수행하며 배포하지 않습니다.
 
 ## 코드 위치
 
@@ -105,7 +73,7 @@ npm run build
 | 검증 | 결과 |
 | --- | --- |
 | TypeScript 검사·Vite 운영 빌드 | 통과 |
-| 프론트 자동 테스트 13개 | 통과 |
+| 프론트 자동 테스트 16개 | 통과 |
 | PC: 체험 진입, 카테고리 선택, 한글 문자열 Enter 저장 | 브라우저 확인 |
 | PC: 상세 수정, 변경 취소 확인창, 저장 후 닫힘 | 브라우저 확인 |
 | PC: 반복 완료, 이력 조회, 완료 취소 | 브라우저 확인 |
