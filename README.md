@@ -22,10 +22,7 @@
 **기억함2는 직접 사용해 온 기억함의 경험을 Java · Spring Boot · PostgreSQL로 다시 만드는 프로젝트입니다.**
 빠르게 기록하고 편하게 꺼내 보는 사용 경험을 이어 가면서, API부터 데이터 모델과 배포까지 직접 설계하고 구현합니다.
 
-> **현재 단계 · React 프론트엔드 연결 구현**
-> 실제 백엔드 API에 맞춘 화면을 추가했습니다. 프론트 빌드·자동 테스트·체험 화면은 검증했으며, Google 로그인과 DB를 포함한 종단 검증은 로컬에서 이어갑니다. 아직 운영 배포하지 않았습니다.
-
-[프론트 실행 및 검증 안내](docs/frontend.md) · [1세대 소스](https://github.com/pabu-lim/gieokham)
+[로컬 실행 방법](#로컬-실행-방법) · [프론트 구현 및 검증](docs/frontend.md) · [기억함1](https://github.com/pabu-lim/gieokham)
 
 ![기억함2 홈 화면 — 체험 데이터](docs/frontend-home.jpg)
 
@@ -45,11 +42,85 @@ Enter로 빠르게 저장하고 Shift+Enter로 줄을 바꿉니다. 카테고리
 
 ### 일정부터 반복 습관까지
 
-날짜만 정하거나 시작·종료 일시를 지정합니다. 일정 없이 반복만 설정할 수도 있습니다. 매일·선택 요일·매월·매년 반복과 날짜별 완료 기록, 완료 취소를 지원합니다.
+시간과 기간은 독립적으로 선택합니다. ‘금요일 14시 병원 예약’처럼 종료일 없는 일정도, 시작·종료 일시가 있는 기간 일정도 기록할 수 있습니다. 일정 없이 반복만 설정할 수도 있습니다. 매일·선택 요일·매월·매년 반복과 날짜별 완료 기록, 완료 취소를 지원합니다.
+
+### 제목은 짧게, 필요한 정보는 상세에
+
+메모의 **추가 메모 (선택)**에 준비물·설명·링크를 최대 10,000자까지 적습니다. 목록에는 첫 줄만 미리 보여주고, 상세를 열면 전체 내용을 편집할 수 있습니다. 저장하지 않고 닫으려 하면 변경 여부를 확인합니다.
+
+<details>
+<summary>메모 상세 화면 보기</summary>
+
+![추가 메모와 중요도·카테고리 편집](docs/memo-notes-preview.jpg)
+
+</details>
 
 ### 내 계정에 안전하게
 
 Google 인증과 명시적인 서비스 가입을 분리합니다. 세션과 CSRF 검증을 사용하고, 서버에서 회원별 소유권을 확인합니다. 로그아웃·세션 만료 시 화면과 암호화 사본을 비웁니다.
+
+## 로컬 실행 방법
+
+Windows PowerShell + IntelliJ 기준입니다. **화면만 체험하려면 1단계와 4단계만** 실행하고 로그인 화면에서 **예시로 체험하기**를 선택하세요. 체험 기록은 서버에 저장되지 않으며 새로고침하면 사라집니다. Google 계정으로 실제 저장하려면 아래 단계를 모두 진행합니다.
+
+### 1. 소스와 도구 준비
+
+전체 실행에는 **JDK 17, Node.js 22.18 이상(npm 포함), PostgreSQL**이 필요합니다. 개발 DB는 PostgreSQL 17을 사용합니다. Gradle은 저장소의 Wrapper를 사용하므로 따로 설치하지 않아도 됩니다.
+
+```powershell
+git clone https://github.com/pabu-lim/gieokham2.git
+cd gieokham2
+```
+
+이미 내려받았다면 저장소에서 `git switch main` 후 `git pull --ff-only`로 최신 코드를 받습니다.
+
+### 2. 개발 전용 DB와 Google 로그인 준비
+
+**주의: `local` 프로필은 Spring을 시작할 때마다 연결된 DB의 기억함 테이블을 삭제하고 테스트 데이터로 다시 채웁니다.** 보관할 기록이 있는 DB를 연결하지 마세요.
+
+- **PostgreSQL:** 기본 연결은 `127.0.0.1:5433/gieokham2`, 계정은 `gieokham_app`입니다. 이미 준비된 DB가 있으면 생성 단계를 건너뜁니다. 새 PC라면 DBeaver에서 관리자 계정으로 `postgres` DB에 연결한 뒤 아래 SQL을 **자동 커밋 상태에서 한 문장씩** 실행합니다. 비밀번호 예시는 자신의 로컬 비밀번호로 바꿉니다.
+- **Google:** Google 인증 플랫폼에서 **웹 애플리케이션** OAuth 클라이언트를 준비하고 승인된 리디렉션 URI에 `http://localhost:8080/login/oauth2/code/google`을 등록합니다. 클라이언트 ID와 보안 비밀번호는 다음 단계의 Spring 환경변수로만 전달합니다.
+
+```sql
+CREATE ROLE gieokham_app LOGIN PASSWORD '여기에_로컬_DB_비밀번호';
+CREATE DATABASE gieokham2 OWNER gieokham_app;
+```
+
+### 3. IntelliJ에서 Spring 실행
+
+1. `gieokham-api`를 Gradle 프로젝트로 열고 Project SDK와 Gradle JVM을 **17**로 설정합니다.
+2. `GieokhamApiApplication`의 실행 구성(**Run → Edit Configurations**)을 엽니다. **Environment variables**가 보이지 않으면 **Modify options**에서 추가하고 아래 값을 등록합니다. **VM options**에는 `-Duser.timezone=Asia/Seoul`을 넣습니다.
+
+| 환경변수 | 값 |
+| --- | --- |
+| `SPRING_PROFILES_ACTIVE` | `local` |
+| `DB_PASSWORD` | `gieokham_app`의 로컬 비밀번호 |
+| `DB_PORT` | 선택. 기본 `5433`; PostgreSQL이 5432에서 실행 중이면 `5432` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | 웹 OAuth 클라이언트의 ID와 보안 비밀번호 (각각 등록) |
+| `LOCAL_GOOGLE_SUB_A`, `LOCAL_GOOGLE_SUB_B` | 서로 다른 테스트 계정의 Google OIDC `sub` (이메일이나 OAuth 클라이언트 ID가 아님) |
+| `APP_FRONTEND_URL` | 선택. `local` 기본값은 `http://localhost:5173/` |
+
+처음이라 `sub`를 모르면 **개발 DB에서만** A/B에 서로 다른 임시 문자열을 넣어 시작할 수 있습니다. 두 계정으로 차례로 로그인·가입한 뒤 DBeaver에서 `SELECT provider_user_id, member_id FROM member_identity WHERE provider = 'GOOGLE';`로 가입한 계정의 값을 확인합니다. 임시 행을 제외한 실제 값을 A/B에 지정하고 재시작하면 **A는 샘플 메모가 있는 홈**, **B는 빈 홈**으로 바로 들어갑니다. 실행 구성의 실제 비밀번호나 계정 ID는 커밋하지 않습니다.
+
+3. 애플리케이션을 실행합니다. 아래 명령의 응답이 `UP`이면 API가 준비된 상태입니다.
+
+```powershell
+(Invoke-RestMethod http://localhost:8080/api/health).status
+```
+
+### 4. React 실행 후 접속
+
+저장소 루트에서 **별도 PowerShell**을 열고 실행합니다.
+
+```powershell
+cd gieokham-web
+npm ci
+npm run dev
+```
+
+[http://localhost:5173/](http://localhost:5173/)에 접속합니다. **5173은 화면, 8080은 API와 Google 콜백**입니다. 인증을 마치면 다시 5173으로 돌아옵니다. `localhost`와 `127.0.0.1`을 섞어 쓰지 마세요.
+
+`npm ci`는 처음 설치하거나 잠금 파일이 바뀌었을 때 실행합니다. `npm run dev`는 사용하는 동안 켜 두면 화면 수정이 자동 반영됩니다. 종료는 `Ctrl+C`입니다. 로그인 후 8080에 머물면 IntelliJ에서 활성 프로필과 `APP_FRONTEND_URL`을 확인하세요.
 
 ## 구성
 
@@ -71,7 +142,7 @@ Google 인증과 명시적인 서비스 가입을 분리합니다. 세션과 CSR
 | `member` | 회원 이름·닉네임·대표 이메일 |
 | `member_identity` | 공급자와 공급자 계정 ID로 회원에 로그인 연결 |
 | `category` | 회원별 카테고리·상위 카테고리·순서 |
-| `memo` | 내용·중요도·카테고리·일정·반복 규칙·커스텀 순서 |
+| `memo` | 내용·추가 메모·중요도·카테고리·일정·반복 규칙·커스텀 순서 |
 | `memo_repeat_day` | 매주 반복 요일 |
 | `memo_completion` | 반복 메모의 날짜별 완료 기록 |
 
@@ -95,8 +166,6 @@ Google 인증과 명시적인 서비스 가입을 분리합니다. 세션과 CSR
 
 ## 현재 검증과 남은 작업
 
-프론트 자동 테스트 13개와 운영 빌드가 통과했습니다. PC와 390px 화면에서 체험 데이터를 이용해 입력·수정·반복 완료·메뉴 전환을 확인했습니다. 실제 Google 로그인·PostgreSQL 연동, 갤럭시 터치와 설치 검증은 남아 있습니다.
+프론트 테스트와 빌드는 `gieokham-web`에서 `npm test`, `npm run build`로 확인할 수 있습니다. 체험 화면에서는 추가 메모 저장·재조회와 미저장 변경 확인을 검증했습니다. 실제 Google 계정 B의 로컬 로그인은 확인했으며, 추가 메모의 실제 PostgreSQL 저장과 갤럭시 터치·설치는 별도 검증 대상입니다.
 
-보류한 항목은 **통합 완료 목록, 신규 가입 기본 데이터, 백업·불러오기**입니다. 반복 완료 이력은 상세에서 확인할 수 있습니다. 기존 기억함의 데이터 자동 이전은 하지 않습니다.
-
-기억함1 저장소와 운영 서비스는 유지합니다. 이 브랜치는 검토용이며 main 병합과 배포는 별도입니다.
+보류한 항목은 **통합 완료 목록, 신규 가입 기본 데이터, 백업·불러오기**입니다. 반복 완료 기록은 상세에서 확인합니다. 기억함1 데이터는 자동 이전하지 않습니다.
