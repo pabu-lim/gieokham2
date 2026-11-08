@@ -1631,6 +1631,7 @@ export function Workspace({
           </DialogDescription>
           {categoryEditor && (
             <form
+              key={categoryEditor.id ?? "new"}
               className="category-form"
               onSubmit={(e) => {
                 e.preventDefault();
@@ -1692,6 +1693,18 @@ export function Workspace({
                   ]}
                 />
               </label>
+              {categoryEditor.id !== null && (
+                <button
+                  type="button"
+                  className="outline"
+                  disabled={busy}
+                  onClick={() =>
+                    setCategoryEditor({ id: null, name: "", parentId: categoryEditor.id })
+                  }
+                >
+                  하위 카테고리 추가
+                </button>
+              )}
               <div className="dialog-actions">
                 {categoryEditor.id !== null && (
                   <button
@@ -1704,6 +1717,7 @@ export function Workspace({
                       )
                     }
                   >
+                    <Trash2 size={16} aria-hidden="true" />
                     삭제
                   </button>
                 )}
