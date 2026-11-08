@@ -510,13 +510,13 @@ export function Workspace({
     }
   }
   useEffect(() => {
-    if (selected && historyExpanded) {
+    if (selected && selected.repeatType !== "NONE" && historyExpanded) {
       void loadHistory(selected.id, historyPage);
     } else {
       historyRevision.current++;
       setHistory([]);
     }
-  }, [selected?.id, historyPage, historyExpanded]);
+  }, [selected?.id, selected?.repeatType, historyPage, historyExpanded]);
   async function addMemo() {
     const problem = validateMemo(quick);
     if (problem) {
@@ -559,7 +559,7 @@ export function Workspace({
         const next = await client.complete(m.id, !completed);
         if (selected?.id === m.id) {
           setSelected(next);
-          if (historyExpanded) await loadHistory(m.id, historyPage);
+          if (next.repeatType !== "NONE" && historyExpanded) await loadHistory(m.id, historyPage);
         }
       },
       completed ? "완료를 취소했습니다." : "완료했습니다.",
@@ -1571,76 +1571,78 @@ export function Workspace({
                   메모 삭제
                 </button>
               </fieldset>
-              <section className="history">
-                <div>
-                  <h3>반복 완료 기록</h3>
-                  <button
-                    type="button"
-                    aria-expanded={historyExpanded}
-                    onClick={() => {
-                      setHistoryPage(0);
-                      setHistoryExpanded(!historyExpanded);
-                    }}
-                  >
-                    {historyExpanded ? "접기" : "더보기"}
-                  </button>
-                </div>
-                {historyExpanded && (historyLoading ? (
-                  <p role="status">기록을 불러오는 중…</p>
-                ) : (
-                  <>
-                    {historyError && (
-                      <p role="alert">
-                        {historyError}
+              {selected.repeatType !== "NONE" && (
+                <section className="history">
+                  <div>
+                    <h3>반복 완료 기록</h3>
+                    <button
+                      type="button"
+                      aria-expanded={historyExpanded}
+                      onClick={() => {
+                        setHistoryPage(0);
+                        setHistoryExpanded(!historyExpanded);
+                      }}
+                    >
+                      {historyExpanded ? "접기" : "더보기"}
+                    </button>
+                  </div>
+                  {historyExpanded && (historyLoading ? (
+                    <p role="status">기록을 불러오는 중…</p>
+                  ) : (
+                    <>
+                      {historyError && (
+                        <p role="alert">
+                          {historyError}
+                          <button
+                            onClick={() => void loadHistory(selected.id, historyPage)}
+                          >
+                            다시 조회
+                          </button>
+                        </p>
+                      )}
+                      {!historyLoading && !historyError && !history.length && (
+                        <p>완료 기록이 없습니다.</p>
+                      )}
+                      {history.map((h) => (
+                        <div key={h.scheduledDate}>
+                          <span>
+                            {h.scheduledDate}
+                            <small>{exactTime(h.completedAt)}</small>
+                          </span>
+                          <button
+                            disabled={busy}
+                            onClick={() =>
+                              void perform(async () => {
+                                await client.undoHistory(
+                                  selected.id,
+                                  h.scheduledDate,
+                                );
+                                await loadHistory(selected.id, historyPage);
+                              }, "완료를 취소했습니다.")
+                            }
+                          >
+                            완료 취소
+                          </button>
+                        </div>
+                      ))}
+                      <div className="history-paging">
                         <button
-                          onClick={() => void loadHistory(selected.id, historyPage)}
+                          disabled={historyPage === 0 || busy}
+                          onClick={() => setHistoryPage((p) => p - 1)}
                         >
-                          다시 조회
+                          이전
                         </button>
-                      </p>
-                    )}
-                    {!historyLoading && !historyError && !history.length && (
-                      <p>완료 기록이 없습니다.</p>
-                    )}
-                    {history.map((h) => (
-                      <div key={h.scheduledDate}>
-                        <span>
-                          {h.scheduledDate}
-                          <small>{exactTime(h.completedAt)}</small>
-                        </span>
                         <button
-                          disabled={busy}
-                          onClick={() =>
-                            void perform(async () => {
-                              await client.undoHistory(
-                                selected.id,
-                                h.scheduledDate,
-                              );
-                              await loadHistory(selected.id, historyPage);
-                            }, "완료를 취소했습니다.")
-                          }
+                          disabled={!historyMore || busy}
+                          onClick={() => setHistoryPage((p) => p + 1)}
                         >
-                          완료 취소
+                          다음
                         </button>
                       </div>
-                    ))}
-                    <div className="history-paging">
-                      <button
-                        disabled={historyPage === 0 || busy}
-                        onClick={() => setHistoryPage((p) => p - 1)}
-                      >
-                        이전
-                      </button>
-                      <button
-                        disabled={!historyMore || busy}
-                        onClick={() => setHistoryPage((p) => p + 1)}
-                      >
-                        다음
-                      </button>
-                    </div>
-                  </>
-                ))}
-              </section>
+                    </>
+                  ))}
+                </section>
+              )}
             </div>
           )}
         </SheetContent>
