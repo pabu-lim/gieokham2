@@ -392,6 +392,9 @@ export function Workspace({
             (!keyword ||
               m.content.toLowerCase().includes(keyword.toLowerCase())),
         );
+        if (page > 0 && page * 30 >= filtered.length) {
+          setPage(Math.max(0, Math.ceil(filtered.length / 30) - 1));
+        }
         setMemos(filtered.slice(page * 30, (page + 1) * 30));
         setTotal(filtered.length);
         setHasNext((page + 1) * 30 < filtered.length);
@@ -1417,25 +1420,27 @@ export function Workspace({
                     </div>
                   )}
                 </div>
-                <div className="pagination">
-                  <button
-                    className="outline"
-                    disabled={page === 0 || loading || busy}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    이전
-                  </button>
-                  <span>
-                    {page + 1} 페이지 · {total}개
-                  </span>
-                  <button
-                    className="outline"
-                    disabled={!hasNext || loading || busy}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    다음
-                  </button>
-                </div>
+                {(page > 0 || hasNext) && (
+                  <div className="pagination">
+                    <button
+                      className="outline"
+                      disabled={page === 0 || loading || busy}
+                      onClick={() => setPage((p) => p - 1)}
+                    >
+                      이전
+                    </button>
+                    <span>
+                      {page + 1} 페이지 · {total}개
+                    </span>
+                    <button
+                      className="outline"
+                      disabled={!hasNext || loading || busy}
+                      onClick={() => setPage((p) => p + 1)}
+                    >
+                      다음
+                    </button>
+                  </div>
+                )}
               </>
             )}
           </section>
